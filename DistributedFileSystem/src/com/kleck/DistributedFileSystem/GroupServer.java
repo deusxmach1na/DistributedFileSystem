@@ -26,7 +26,7 @@ public class GroupServer extends Thread {
 	private long runtime;
 	private long starttime;
 	private int portNumber;
-	Properties props;
+	private Properties props;
 
 	public GroupServer(int portNumber, boolean isContact) {
 		//start server
@@ -58,11 +58,13 @@ public class GroupServer extends Thread {
 		
 		//send data to contact server
 		sendToContactServer();
+		/*
 		if(!this.isContact) {
 			ElectionMessage em = new ElectionMessage(this.getProcessId(), false);
 			SendElectionThread set = new SendElectionThread(this, em);
 			set.start();
 		}
+		*/
 		
 
 		//schedule threads to run
@@ -258,6 +260,9 @@ public class GroupServer extends Thread {
 		System.out.println(this.runtime);
 	}
 
+	public Properties getProps() {
+		return props;
+	}
 
 
 }

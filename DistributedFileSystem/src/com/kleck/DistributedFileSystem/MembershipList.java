@@ -121,7 +121,7 @@ public class MembershipList implements Serializable {
 	public String toString() {
 		String ret = "";
 		for(String key: this.ml.keySet()) {
-			ret += this.ml.get(key).toString() + "\n";
+			ret += "\nMembership Details For:" + key + " \n" + this.ml.get(key).toString() + "\n";
 		}
 		return ret;
 	}
@@ -135,7 +135,6 @@ public class MembershipList implements Serializable {
 				this.ml.get(key).setMaster(false);
 			}
 		}
-		
 	}
 
 	public String getMaster() {

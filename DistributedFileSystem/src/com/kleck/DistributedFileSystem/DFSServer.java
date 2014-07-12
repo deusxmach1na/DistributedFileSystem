@@ -94,7 +94,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		catch(RemoteException re) {
 			re.printStackTrace();
 		}
-		catch (MalformedURLException e) {
+		catch(MalformedURLException e) {
 			System.out.println("Could not create server in registry");
 			e.printStackTrace();
 		}
@@ -116,17 +116,22 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		if(this.gs.getMembershipList().getMaster().equals(this.gs.getProcessId())) {
 			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
 		}
+		else {
+			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(false);
+		}
+		this.gs.getMembershipList().setSuccessors();
 		//System.out.println(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster());
 		if(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster() && isFirstRun) {
-			int size = Integer.parseInt(this.gs.props.getProperty("shardsize"));
+			int size = Integer.parseInt(this.gs.getProps().getProperty("shardsize"));
 			List<byte[]> files = DFSServer.shardFile(file, size);
 			System.out.println("Sharded into " + files.size() + " files.");
-			int replicationFactor = Integer.parseInt(gs.props.getProperty("replicationfactor"));
+			int replicationFactor = Integer.parseInt(this.gs.getProps().getProperty("replicationfactor"));
 			//append a digit to the filename then save 1 copy on the correct node
 			//then store another copy on the each nodes successor
 			for(int i=0;i<files.size();i++) {
 				String newFile = filename + i;
 				String sentToProcess = this.gs.getSendToProcess(newFile);
+				System.out.println("rep factor " + replicationFactor + sentToProcess);
 				
 				//stores a copy on sentToProcess then 
 				//stores an additional copy on sentToProcess successor
@@ -134,6 +139,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 					DFSServerInterface dfsServer = null;
 					//String rmiServer = "rmi://localhost/DFSServer";
 					String rmiServer = getRMIHostname(sentToProcess);
+					System.out.println("saving file on " + rmiServer);
 					try {
 						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 					} catch (MalformedURLException e) {
@@ -146,7 +152,8 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				}
 			}
 		}
-		else {
+		if (!isFirstRun) {
+			System.out.println("saving file");
 			//the master is telling you to save a file shard
 			FileOutputStream fos;
 			try {
@@ -180,8 +187,14 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		//if you are the master you need to find all the file shards
 		//and re-assemble them
 		if(this.gs.getMembershipList().getMaster().equals(this.gs.getProcessId())) {
+			System.out.println("the master");
 			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
 		}
+		else {
+			System.out.println("not the master");
+			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(false);
+		}
+		this.gs.getMembershipList().setSuccessors();
 		//System.out.println(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster());
 		if(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster() && isFirstRun) {
 			byte[] fileToReturn = null;
@@ -197,7 +210,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				String potentialProcess = this.gs.getSendToProcess(fileToFind);
 				
 				//loop through all the potential processes so you can find the right file
-				int replicationFactor = Integer.parseInt(gs.props.getProperty("replicationfactor"));
+				int replicationFactor = Integer.parseInt(gs.getProps().getProperty("replicationfactor"));
 				for(int j=0;j<replicationFactor;j++) {
 					DFSServerInterface dfsServer = null;
 					String rmiServer = getRMIHostname(potentialProcess);
@@ -223,14 +236,14 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				i++;
 			}
 			
-			
 			//we now have all the pieces, sew them together
 			result = fileToReturn;
 			System.out.println("get complete");
 		}
 		
 		//if you are not the master just return the file you are asked to get
-		else {
+		if (!isFirstRun) {
+			System.out.println("getting file");
 			Path path = Paths.get(filename);
 			try {
 				result = Files.readAllBytes(path);
@@ -253,6 +266,10 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		if(this.gs.getMembershipList().getMaster().equals(this.gs.getProcessId())) {
 			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
 		}
+		else {
+			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(false);
+		}
+		this.gs.getMembershipList().setSuccessors();
 		//System.out.println(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster());
 		if(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster() && isFirstRun) {
 			//find all the files and delete them
@@ -265,7 +282,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				boolean fileShardFound = false;
 				
 				//loop through all the potential processes so you can find the right file
-				int replicationFactor = Integer.parseInt(gs.props.getProperty("replicationfactor"));
+				int replicationFactor = Integer.parseInt(gs.getProps().getProperty("replicationfactor"));
 				for(int j=0;j<replicationFactor;j++) {
 					DFSServerInterface dfsServer = null;
 					String rmiServer = getRMIHostname(potentialProcess);
@@ -295,7 +312,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			
 			
 		}
-		else {
+		if (!isFirstRun){
 			File file = new File(filename);
 			file.delete();
 		}

@@ -103,9 +103,15 @@ class MembershipListRow implements Serializable {
 	}
 	
 	public String toString() {
-		return this.processId + " - " + this.portNumber + " - " + this.hbCounter + " - " + this.timeStamp + 
-				" - " + this.isDeletable + " - " + this.hasLeft + " - " + this.hashKey + " - " + this.successor +
-				" - " + this.isMaster;
+		return "ProcessId = " + this.processId 
+				+ "\nPortNumber = " + this.portNumber 
+				+ "\nHearbeat = " + this.hbCounter 
+				+ "\nTimeStamp = " + this.timeStamp 
+				+ "\nIsDeletable = " + this.isDeletable 
+				+ "\nIsHasLeft = " + this.hasLeft 
+				+ "\nHashKey = " + this.hashKey 
+				+ "\nSuccessor = " + this.successor
+				+ "\nisMaster = " + this.isMaster;
 	}
 
 	public int getPortNumber() {
