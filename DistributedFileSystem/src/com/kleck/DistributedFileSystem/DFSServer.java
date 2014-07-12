@@ -1,6 +1,5 @@
 package com.kleck.DistributedFileSystem;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -226,7 +225,6 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 	@Override
 	//
 	public void delete(String filename, boolean isFirstRun) throws RemoteException {
-		boolean result = false;
 		boolean isLastShard = false;
 		int filesFound = 0;
 		//if you are the master you need to find all the file shards
