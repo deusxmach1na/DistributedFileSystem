@@ -121,14 +121,15 @@ public class MembershipList implements Serializable {
 	public String toString() {
 		String ret = "";
 		for(String key: this.ml.keySet()) {
-			ret += "\nMembership Details For:" + key + " \n" + this.ml.get(key).toString() + "\n";
+			ret += "\n" + this.ml.get(key).toString() + "\n";
 		}
 		return ret;
 	}
 
-	public void setMaster(Long winningProcess) {
+	//master election 4th credit
+	public void setMaster() {
 		for(String key: this.ml.keySet()) {
-			if(key.equals(this.getProcessIdByHash(winningProcess))) {
+			if(key.equals(this.getMaster())) {
 				this.ml.get(key).setMaster(true);
 			}
 			else {
@@ -137,6 +138,7 @@ public class MembershipList implements Serializable {
 		}
 	}
 
+	//get the process that has been around the longest
 	public String getMaster() {
 		long min = 9223372036854775807L;
 		String result = "";
@@ -148,7 +150,6 @@ public class MembershipList implements Serializable {
 				result = key;
 			}
 		}
-		
 		return result;
 	}
 	

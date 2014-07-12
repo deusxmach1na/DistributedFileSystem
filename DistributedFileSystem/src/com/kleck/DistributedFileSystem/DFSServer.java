@@ -33,7 +33,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		System.setProperty("java.security.policy","security.policy");
 		this.gs = new GroupServer(port, isContact);
 		this.gs.start();
-		startServer(port, isContact);
+		this.gs.startRMIServer(this);
 	}
 	
 	//main method
@@ -68,59 +68,17 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		}
 	}
 
-	private void startServer(int port, boolean isContact) {
-		try {
-			//create registry and start server
-			System.setProperty("java.rmi.server.hostname", "localhost");
-			try {
-				LocateRegistry.createRegistry(1099);
-			}
-			catch (ExportException e) {
-				LocateRegistry.getRegistry(1099);
-				//e.printStackTrace();
-			}
-			//new GroupServer(port, isContact);
-			//rmi host will be something like "rmi://localhost/<IPAddress><Port>";
-			while(this.gs.getMembershipList().size() < 1) {
-				System.out.println("...");
-			}
-			System.out.println(this.gs.getMembershipList().size() + " entries in ML");
-			String rmiHostname = this.getRMIHostname(this.gs.getProcessId()).replace("rmi://" + 
-					this.gs.getMembershipList().getMember(this.gs.getProcessId()).getIpAddress()
-					+ "/", "");
-			Naming.rebind(rmiHostname, this);
-			System.out.println("rmi created" + rmiHostname);	
-		}
-		catch(RemoteException re) {
-			re.printStackTrace();
-		}
-		catch(MalformedURLException e) {
-			System.out.println("Could not create server in registry");
-			e.printStackTrace();
-		}
-		/*
-		catch (AlreadyBoundException e) {
-			//Naming.rebind("DFSServer", dfs);
-			e.printStackTrace();
-		}
-		*/
-	}
-
 
 	@Override
 	//this needs to take a file and shard it then push it to other servers
 	//so it is duplicated the number of times indicated in replicationfactor setting
 	public boolean put(String filename, byte[] file, boolean isFirstRun) throws RemoteException {
+		//System.out.println("put entrance");
+		this.gs.getMembershipList().setMaster();
 		//if you are the master you need to shard the file and send a call to the
 		//other servers to save the file
-		if(this.gs.getMembershipList().getMaster().equals(this.gs.getProcessId())) {
-			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
-		}
-		else {
-			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(false);
-		}
 		this.gs.getMembershipList().setSuccessors();
-		//System.out.println(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster());
+		
 		if(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster() && isFirstRun) {
 			int size = Integer.parseInt(this.gs.getProps().getProperty("shardsize"));
 			List<byte[]> files = DFSServer.shardFile(file, size);
@@ -168,7 +126,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		System.out.println("put finished");
 		return false;
 	}
-
+	
 	//get the hostname
 	private String getRMIHostname(String sentToProcess) {
 		String ipAddress = this.gs.getMembershipList().getMember(sentToProcess).getIpAddress();
@@ -187,7 +145,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		//if you are the master you need to find all the file shards
 		//and re-assemble them
 		if(this.gs.getMembershipList().getMaster().equals(this.gs.getProcessId())) {
-			System.out.println("the master");
+			//System.out.println("the master");
 			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
 		}
 		else {

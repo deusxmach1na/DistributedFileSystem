@@ -38,13 +38,13 @@ public class HandleElectionMessageThread extends Thread{
 					set.start();
 				}
 				else {
-					this.gs.getMembershipList().setMaster(this.em.getWinningProcess());
+					//this.gs.getMembershipList().setMaster(this.em.getWinningProcess());
 				}
 				forward = false;
 			}
 			//else set coordinator
 			else {
-				this.gs.getMembershipList().setMaster(this.em.getWinningProcess());
+				//this.gs.getMembershipList().setMaster(this.em.getWinningProcess());
 			}
 		}
 		

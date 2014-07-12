@@ -69,11 +69,13 @@ public class UpdateMembershipListThread extends Thread {
 			if((currentTime - compareTime) > 2 * timeFail && member.isDeletable() && member.isHasLeft()) {
 				//if its the contact server that left keep sending to it occasionally
 				if(!member.isContact()) {
+					this.gs.startRMIServer(this.gs.getDfsServer());
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#PROCESS_LEFT_VOLUNTARILY#" + key);
 					lt.start();	
 					this.gs.getMembershipList().removeMember(key);
 				}
 				else if(currentTime - compareTime <= 3 * timeFail) {
+					this.gs.startRMIServer(this.gs.getDfsServer());
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#CONTACT_LEFT_VOLUNTARILY#" + key);
 					lt.start();	
 				}
@@ -83,12 +85,14 @@ public class UpdateMembershipListThread extends Thread {
 			//REMOVE
 			if((currentTime - compareTime) > 2 * timeFail && member.isDeletable() && !member.isHasLeft()) {
 				if(!member.isContact()) {
+					this.gs.startRMIServer(this.gs.getDfsServer());
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#REMOVED_FAILED_PROCESS#" + key);
 					lt.start();	
 					this.gs.getMembershipList().removeMember(key);
 				}
 				//System.out.println(key + " REMOVE");
 				else if((currentTime - compareTime) <= 3 * timeFail){
+					this.gs.startRMIServer(this.gs.getDfsServer());
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#REMOVED_FAILED_CONTACT#" + key);
 					lt.start();	
 				}

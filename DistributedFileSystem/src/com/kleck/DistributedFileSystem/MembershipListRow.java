@@ -111,6 +111,7 @@ class MembershipListRow implements Serializable {
 				+ "\nIsHasLeft = " + this.hasLeft 
 				+ "\nHashKey = " + this.hashKey 
 				+ "\nSuccessor = " + this.successor
+				+ "\nisContact = " + this.isContact
 				+ "\nisMaster = " + this.isMaster;
 	}
 

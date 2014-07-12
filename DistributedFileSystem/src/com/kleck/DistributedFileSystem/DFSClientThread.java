@@ -30,9 +30,11 @@ public class DFSClientThread extends Thread {
 		
 		//set the DFS master initially
 		try {
+			//System.out.println(Naming.list(rmiServer).toString());
 			this.dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 			//get the user command (put, get, delete)		
 			if(command.split(" ")[0].equals("put")) {
+				//System.out.println("issuing put to server");
 				Path pathToFile = Paths.get(command.split(" ")[1]);
 				this.dfsServer.put(command.split(" ")[2], Files.readAllBytes(pathToFile), true);
 			}
@@ -48,19 +50,19 @@ public class DFSClientThread extends Thread {
 			}		
 		} catch (ConnectException e) {
 			//issue connecting to server assume it failed
+			//e.printStackTrace();	
 			Thread.currentThread().interrupt();
-			return;
-			//e.printStackTrace();		
+			return;	
 		} catch (NullPointerException e) {
 			//issue connecting to server assume it failed
+			//e.printStackTrace();
 			Thread.currentThread().interrupt();
 			return;
-			//e.printStackTrace();
 		} catch (NotBoundException e) {
 			//could not find the server it must have failed
+			//e.printStackTrace();
 			Thread.currentThread().interrupt();
 			return;
-			//e.printStackTrace();
 		} catch (RemoteException e) {
 			e.printStackTrace();
 			//Thread.currentThread().interrupt();

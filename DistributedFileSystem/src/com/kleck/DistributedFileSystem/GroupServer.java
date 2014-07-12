@@ -8,7 +8,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.server.ExportException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
@@ -27,6 +32,7 @@ public class GroupServer extends Thread {
 	private long starttime;
 	private int portNumber;
 	private Properties props;
+	private DFSServer dfsServer;
 
 	public GroupServer(int portNumber, boolean isContact) {
 		//start server
@@ -101,7 +107,7 @@ public class GroupServer extends Thread {
 					break;
 				}
 				if(command.equals("print")) {
-					System.out.println("Membership List");					
+					System.out.println("Membership List for " + this.getProcessId());					
 					
 					//clean up threads
 					System.out.println(this.getMembershipList().toString());
@@ -262,6 +268,65 @@ public class GroupServer extends Thread {
 
 	public Properties getProps() {
 		return props;
+	}
+
+	public void startRMIServer(DFSServer dfsServer) {
+		this.setDfsServer(dfsServer);
+		try {
+			//create registry and start server
+			System.setProperty("java.rmi.server.hostname", "localhost");
+			try {
+				LocateRegistry.createRegistry(1099);
+			}
+			catch (ExportException e) {
+				LocateRegistry.getRegistry(1099);
+				//e.printStackTrace();
+			}
+			//new GroupServer(port, isContact);
+			//rmi host will be something like "rmi://localhost/<IPAddress><Port>";
+			while(this.getMembershipList().size() < 1) {
+				System.out.println("...");
+			}
+			//System.out.println(this.gs.getMembershipList().size() + " entries in ML");
+			String rmiHostname = this.getRMIHostname(this.getProcessId()).replace("rmi://" + 
+					this.getMembershipList().getMember(this.getProcessId()).getIpAddress()
+					+ "/", "");
+			Naming.rebind(rmiHostname, dfsServer);
+			System.out.println("rmi created" + rmiHostname);	
+		}
+		catch(RemoteException re) {
+			re.printStackTrace();
+		}
+		catch(MalformedURLException e) {
+			System.out.println("Could not create server in registry");
+			e.printStackTrace();
+		}
+		/*
+		catch (AlreadyBoundException e) {
+			//Naming.rebind("DFSServer", dfs);
+			e.printStackTrace();
+		}
+		*/
+	}
+	
+	//get the hostname
+	private String getRMIHostname(String sentToProcess) {
+		String ipAddress = this.getMembershipList().getMember(sentToProcess).getIpAddress();
+		if(ipAddress.equals("127.0.0.1") || ipAddress.equals("192.168.1.7")) {
+			ipAddress = "localhost";
+		}
+		String rmiServer = "rmi://" + this.getMembershipList().getMember(sentToProcess).getIpAddress()
+				+ "/" + ipAddress
+				+ this.getMembershipList().getMember(sentToProcess).getPortNumber();
+		return rmiServer;
+	}
+
+	public DFSServer getDfsServer() {
+		return dfsServer;
+	}
+
+	public void setDfsServer(DFSServer dfsServer) {
+		this.dfsServer = dfsServer;
 	}
 
 
