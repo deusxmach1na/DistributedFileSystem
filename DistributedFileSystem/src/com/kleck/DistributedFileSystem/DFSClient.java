@@ -75,7 +75,12 @@ public class DFSClient {
 	    	String[] host = hosts[i].split(",");
 	    	if(!host[0].equals("") && !host[1].equals("")) {
 	    		//"rmi://localhost/DFSServer"
-	    		String rmiServer = "rmi://" + host[0] + "/" + host[0].replace(".", "") + host[1];
+	    		String ipAddress = host[0];
+	    		if(ipAddress.equals("127.0.0.1")) {
+	    			ipAddress = "localhost";
+	    		}
+	    		String rmiServer = "rmi://" + host[0] + "/" + ipAddress + host[1];
+	    		//System.out.println(rmiServer);
 	            sends.add(new DFSClientThread(rmiServer, command));
 	            sends.get(i).start();	
 	    	}

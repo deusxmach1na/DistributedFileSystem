@@ -137,6 +137,21 @@ public class MembershipList implements Serializable {
 		}
 		
 	}
+
+	public String getMaster() {
+		long min = 9223372036854775807L;
+		String result = "";
+		//return the oldest process
+		for(String key:this.getActiveKeys()) {
+			long time = Long.parseLong(this.getMember(key).getProcessId().replace("-" + this.getMember(key).getIpAddress(), ""));
+			if(time < min) {
+				min = time;
+				result = key;
+			}
+		}
+		
+		return result;
+	}
 	
 }
 

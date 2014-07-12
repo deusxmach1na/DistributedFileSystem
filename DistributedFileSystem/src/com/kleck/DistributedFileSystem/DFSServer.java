@@ -51,7 +51,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			System.out.println("Using default port " + port + " for gossip communication.");
 		}
 		//change port and server if args are passed
-		if(args.length == 3) {
+		if(args.length == 2) {
 			if(args[1].equals("true")) {
 				System.out.println("Starting Contact Server");
 				isContact = true;
@@ -77,13 +77,19 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			}
 			catch (ExportException e) {
 				LocateRegistry.getRegistry(1099);
+				//e.printStackTrace();
 			}
-			new GroupServer(port, isContact);
+			//new GroupServer(port, isContact);
 			//rmi host will be something like "rmi://localhost/<IPAddress><Port>";
-			String rmiHostname = this.gs.getMembershipList().getMember(this.gs.getProcessId()).getIpAddress().replace(".", "") + 
-					this.gs.getMembershipList().getMember(this.gs.getProcessId()).getPortNumber();
+			while(this.gs.getMembershipList().size() < 1) {
+				System.out.println("...");
+			}
+			System.out.println(this.gs.getMembershipList().size() + " entries in ML");
+			String rmiHostname = this.getRMIHostname(this.gs.getProcessId()).replace("rmi://" + 
+					this.gs.getMembershipList().getMember(this.gs.getProcessId()).getIpAddress()
+					+ "/", "");
 			Naming.rebind(rmiHostname, this);
-			System.out.println("rmi created");	
+			System.out.println("rmi created" + rmiHostname);	
 		}
 		catch(RemoteException re) {
 			re.printStackTrace();
@@ -107,7 +113,9 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 	public boolean put(String filename, byte[] file, boolean isFirstRun) throws RemoteException {
 		//if you are the master you need to shard the file and send a call to the
 		//other servers to save the file
-		this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
+		if(this.gs.getMembershipList().getMaster().equals(this.gs.getProcessId())) {
+			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
+		}
 		//System.out.println(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster());
 		if(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster() && isFirstRun) {
 			int size = Integer.parseInt(this.gs.props.getProperty("shardsize"));
@@ -125,9 +133,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				for(int j=0;j<replicationFactor;j++) {
 					DFSServerInterface dfsServer = null;
 					//String rmiServer = "rmi://localhost/DFSServer";
-					String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(sentToProcess).getIpAddress()
-							+ "/" + this.gs.getMembershipList().getMember(sentToProcess).getIpAddress()
-							+ this.gs.getMembershipList().getMember(sentToProcess).getPortNumber();
+					String rmiServer = getRMIHostname(sentToProcess);
 					try {
 						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 					} catch (MalformedURLException e) {
@@ -156,12 +162,26 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		return false;
 	}
 
+	//get the hostname
+	private String getRMIHostname(String sentToProcess) {
+		String ipAddress = this.gs.getMembershipList().getMember(sentToProcess).getIpAddress();
+		if(ipAddress.equals("127.0.0.1") || ipAddress.equals("192.168.1.7")) {
+			ipAddress = "localhost";
+		}
+		String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(sentToProcess).getIpAddress()
+				+ "/" + ipAddress
+				+ this.gs.getMembershipList().getMember(sentToProcess).getPortNumber();
+		return rmiServer;
+	}
+
 	@Override
 	public byte[] get(String filename, boolean isFirstRun) throws RemoteException {
 		byte[] result = null;
 		//if you are the master you need to find all the file shards
 		//and re-assemble them
-		this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
+		if(this.gs.getMembershipList().getMaster().equals(this.gs.getProcessId())) {
+			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
+		}
 		//System.out.println(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster());
 		if(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster() && isFirstRun) {
 			byte[] fileToReturn = null;
@@ -180,10 +200,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				int replicationFactor = Integer.parseInt(gs.props.getProperty("replicationfactor"));
 				for(int j=0;j<replicationFactor;j++) {
 					DFSServerInterface dfsServer = null;
-					//String rmiServer = "rmi://localhost/DFSServer";
-					String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(potentialProcess).getIpAddress()
-							+ "/" + this.gs.getMembershipList().getMember(potentialProcess).getIpAddress()
-							+ this.gs.getMembershipList().getMember(potentialProcess).getPortNumber();
+					String rmiServer = getRMIHostname(potentialProcess);
 					try {
 						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 						if(dfsServer.fileExists(fileToFind) && filesFound == i) {
@@ -233,7 +250,9 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		int filesFound = 0;
 		//if you are the master you need to find all the file shards
 		//and re-assemble them
-		this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
+		if(this.gs.getMembershipList().getMaster().equals(this.gs.getProcessId())) {
+			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
+		}
 		//System.out.println(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster());
 		if(this.gs.getMembershipList().getMember(this.gs.getProcessId()).isMaster() && isFirstRun) {
 			//find all the files and delete them
@@ -249,10 +268,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				int replicationFactor = Integer.parseInt(gs.props.getProperty("replicationfactor"));
 				for(int j=0;j<replicationFactor;j++) {
 					DFSServerInterface dfsServer = null;
-					//String rmiServer = "rmi://localhost/DFSServer";
-					String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(potentialProcess).getIpAddress()
-							+ "/" + this.gs.getMembershipList().getMember(potentialProcess).getIpAddress()
-							+ this.gs.getMembershipList().getMember(potentialProcess).getPortNumber();
+					String rmiServer = getRMIHostname(potentialProcess);
 					try {
 						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 						if(dfsServer.fileExists(fileToFind)) {
@@ -324,7 +340,4 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 		}
 		return result;
 	}
-	
-	
-	
 }
