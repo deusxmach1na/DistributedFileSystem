@@ -79,9 +79,11 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				LocateRegistry.getRegistry(1099);
 			}
 			new GroupServer(port, isContact);
-			Naming.rebind("DFSServer", this);
-			System.out.println("rmi created");
-			
+			//rmi host will be something like "rmi://localhost/<IPAddress><Port>";
+			String rmiHostname = this.gs.getMembershipList().getMember(this.gs.getProcessId()).getIpAddress().replace(".", "") + 
+					this.gs.getMembershipList().getMember(this.gs.getProcessId()).getPortNumber();
+			Naming.rebind(rmiHostname, this);
+			System.out.println("rmi created");	
 		}
 		catch(RemoteException re) {
 			re.printStackTrace();
@@ -122,9 +124,10 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				//stores an additional copy on sentToProcess successor
 				for(int j=0;j<replicationFactor;j++) {
 					DFSServerInterface dfsServer = null;
-					String rmiServer = "rmi://localhost/DFSServer";
-					//String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(sentToProcess).getIpAddress()
-					//		+ "/" + this.gs.getMembershipList().getMember(sentToProcess).getProcessId();
+					//String rmiServer = "rmi://localhost/DFSServer";
+					String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(sentToProcess).getIpAddress()
+							+ "/" + this.gs.getMembershipList().getMember(sentToProcess).getIpAddress()
+							+ this.gs.getMembershipList().getMember(sentToProcess).getPortNumber();
 					try {
 						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 					} catch (MalformedURLException e) {
@@ -177,9 +180,10 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				int replicationFactor = Integer.parseInt(gs.props.getProperty("replicationfactor"));
 				for(int j=0;j<replicationFactor;j++) {
 					DFSServerInterface dfsServer = null;
-					String rmiServer = "rmi://localhost/DFSServer";
-					//String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(sentToProcess).getIpAddress()
-					//		+ "/" + this.gs.getMembershipList().getMember(sentToProcess).getProcessId();
+					//String rmiServer = "rmi://localhost/DFSServer";
+					String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(potentialProcess).getIpAddress()
+							+ "/" + this.gs.getMembershipList().getMember(potentialProcess).getIpAddress()
+							+ this.gs.getMembershipList().getMember(potentialProcess).getPortNumber();
 					try {
 						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 						if(dfsServer.fileExists(fileToFind) && filesFound == i) {
@@ -245,9 +249,10 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				int replicationFactor = Integer.parseInt(gs.props.getProperty("replicationfactor"));
 				for(int j=0;j<replicationFactor;j++) {
 					DFSServerInterface dfsServer = null;
-					String rmiServer = "rmi://localhost/DFSServer";
-					//String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(sentToProcess).getIpAddress()
-					//		+ "/" + this.gs.getMembershipList().getMember(sentToProcess).getProcessId();
+					//String rmiServer = "rmi://localhost/DFSServer";
+					String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(potentialProcess).getIpAddress()
+							+ "/" + this.gs.getMembershipList().getMember(potentialProcess).getIpAddress()
+							+ this.gs.getMembershipList().getMember(potentialProcess).getPortNumber();
 					try {
 						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 						if(dfsServer.fileExists(fileToFind)) {
