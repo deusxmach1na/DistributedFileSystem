@@ -1,0 +1,11 @@
+#settings file
+#everything is in ms, so 1000 ms = 1 s
+
+contactserver=localhost,6665
+timeFail=2300
+timeGossip=500
+timeUpdateHeartbeat=500
+timeUpdateList=1000
+shardsize=1048576
+replicationfactor=2
+servers=localhost,6665;localhost,6667;localhost,6669;localhost,6671;
