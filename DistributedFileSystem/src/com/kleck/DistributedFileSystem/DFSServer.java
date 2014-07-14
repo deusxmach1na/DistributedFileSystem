@@ -104,7 +104,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 						e.printStackTrace();
 					}
 					dfsServer.put(newFile, files.get(i), false);
-					this.gs.getMembershipList().getMember(sentToProcess).getSuccessor();
+					sentToProcess = this.gs.getMembershipList().getMember(sentToProcess).getSuccessor();
 				}
 			}
 		}
@@ -248,6 +248,8 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 					try {
 						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 						if(dfsServer.fileExists(fileToFind)) {
+							LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#DELETE_FILE#" + fileToFind);
+							lt.start();	 
 							dfsServer.delete(fileToFind, false);
 							if(!fileShardFound) {
 								filesFound++;
