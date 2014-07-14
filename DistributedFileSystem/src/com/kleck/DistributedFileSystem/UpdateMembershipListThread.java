@@ -51,10 +51,11 @@ public class UpdateMembershipListThread extends Thread {
 			//DELETE
 			if((currentTime - compareTime) > timeFail && !key.equals(this.gs.getProcessId())) {
 				if(!member.isContact()) {
-					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#PROCESS_FAILING#" + key);
-					lt.start();
+					//LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#PROCESS_FAILING#" + key);
+					//lt.start();
 				}
 				member.setDeletable(true);
+				this.gs.startRMIServer(this.gs.getDfsServer());
 				//System.out.println(key + " DELETE");
 			}	
 			

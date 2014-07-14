@@ -23,7 +23,7 @@ public class DFSClient {
 		while(true) {
 			//get the user command (put, get, delete)
 			String command = "";
-			System.out.print("Enter a command:");
+			System.out.print("sdfs>");
 			try {
 				command = inFromUser.readLine();
 			} catch (IOException e) {
@@ -38,10 +38,12 @@ public class DFSClient {
 			//get user input
 			if(command.split(" ").length > 3 || command.split(" ").length < 2) {
 				System.out.println("Invalid command");
+				this.printUsage();
 			}
 			else if(command.split(" ")[0].equals("put")) {
 				if(command.split(" ").length < 3) {
 					System.out.println("Invalid command");
+					this.printUsage();
 				}
 				else {
 					boolean fileCheck = checkLocalFilename(command.split(" ")[1]);
@@ -55,6 +57,7 @@ public class DFSClient {
 			else if(command.split(" ")[0].equals("get")) {
 				if(command.split(" ").length < 3) {
 					System.out.println("Invalid command");
+					this.printUsage();
 				}
 				else {
 					spinUpThreads(command);
@@ -124,6 +127,14 @@ public class DFSClient {
 	    	System.out.println("Did not find property file settings.prop.\nEnsure it is in the same folder as the jar.");
 	    }
 	    return props;
+	}
+	
+	//print proper usage
+	public void printUsage() {
+		System.out.println("Sample Usage:");
+		System.out.println("put <localfilename> <sdfsfilename>");
+		System.out.println("get <sdfsfilename> <localfilename>");
+		System.out.println("delete <sdfsfilename>");
 	}
 
 }

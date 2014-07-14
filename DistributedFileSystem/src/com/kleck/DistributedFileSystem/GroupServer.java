@@ -292,7 +292,7 @@ public class GroupServer extends Thread {
 					this.getMembershipList().getMember(this.getProcessId()).getIpAddress()
 					+ "/", "");
 			Naming.rebind(rmiHostname, dfsServer);
-			System.out.println("rmi created" + rmiHostname);	
+			//System.out.println("rmi created" + rmiHostname);	
 		}
 		catch(RemoteException re) {
 			re.printStackTrace();
@@ -328,6 +328,4 @@ public class GroupServer extends Thread {
 	public void setDfsServer(DFSServer dfsServer) {
 		this.dfsServer = dfsServer;
 	}
-
-
 }

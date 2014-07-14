@@ -87,7 +87,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			for(int i=0;i<files.size();i++) {
 				String newFile = filename + i;
 				String sentToProcess = this.gs.getSendToProcess(newFile);
-				System.out.println("rep factor " + replicationFactor + sentToProcess);
+				//System.out.println("rep factor " + replicationFactor + sentToProcess);
 				
 				//stores a copy on sentToProcess then 
 				//stores an additional copy on sentToProcess successor
@@ -95,7 +95,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 					DFSServerInterface dfsServer = null;
 					//String rmiServer = "rmi://localhost/DFSServer";
 					String rmiServer = getRMIHostname(sentToProcess);
-					System.out.println("saving file on " + rmiServer);
+					//System.out.println("saving file on " + rmiServer);
 					try {
 						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 					} catch (MalformedURLException e) {
@@ -109,19 +109,21 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			}
 		}
 		if (!isFirstRun) {
-			System.out.println("saving file");
+			//System.out.println("saving file");
 			//the master is telling you to save a file shard
 			FileOutputStream fos;
 			try {
 				fos = new FileOutputStream(filename);
 				fos.write(file);
+				LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#PUT_FILE#" + filename);
+				lt.start();	 
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("put finished");
+		//System.out.println("put finished");
 		return false;
 	}
 	
@@ -147,7 +149,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(true);
 		}
 		else {
-			System.out.println("not the master");
+			//System.out.println("not the master");
 			this.gs.getMembershipList().getMember(this.gs.getProcessId()).setMaster(false);
 		}
 		this.gs.getMembershipList().setSuccessors();
@@ -194,21 +196,22 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			
 			//we now have all the pieces, sew them together
 			result = fileToReturn;
-			System.out.println("get complete");
+			//System.out.println("get complete");
 		}
 		
 		//if you are not the master just return the file you are asked to get
 		if (!isFirstRun) {
-			System.out.println("getting file");
+			//System.out.println("getting file");
 			Path path = Paths.get(filename);
 			try {
+				LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#GET_FILE#" + filename);
+				lt.start();	 
 				result = Files.readAllBytes(path);
 				//System.out.println("here");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
-		
 		return result;
 	}
 
@@ -238,8 +241,8 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 				boolean fileShardFound = false;
 				
 				//loop through all the potential processes so you can find the right file
-				int replicationFactor = Integer.parseInt(gs.getProps().getProperty("replicationfactor"));
-				for(int j=0;j<replicationFactor;j++) {
+				//int replicationFactor = Integer.parseInt(gs.getProps().getProperty("replicationfactor"));
+				for(int j=0;j<this.gs.getMembershipList().getActiveKeys().size();j++) {
 					DFSServerInterface dfsServer = null;
 					String rmiServer = getRMIHostname(potentialProcess);
 					try {
@@ -272,7 +275,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			File file = new File(filename);
 			file.delete();
 		}
-		System.out.println("hello from delete");
+		//System.out.println("hello from delete");
 	}
 	
 	@Override

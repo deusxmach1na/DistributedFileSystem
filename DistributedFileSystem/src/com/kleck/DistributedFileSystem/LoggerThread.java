@@ -26,19 +26,22 @@ public class LoggerThread extends Thread {
 	public void run() {
     	
 	    try {  
-	    	this.fileHandler = new FileHandler(this.processId + ".log", true);
-	        logger.addHandler(fileHandler);  
-	        logger.setLevel(Level.ALL);  
-	        SimpleFormatter formatter = new SimpleFormatter();  
-	        fileHandler.setFormatter(formatter);  
+	    	//this.fileHandler = new FileHandler(this.processId + ".log", true);
+	        //logger.addHandler(fileHandler);  
+	        //logger.setLevel(Level.ALL);  
+	        //SimpleFormatter formatter = new SimpleFormatter();  
+	        //fileHandler.setFormatter(formatter);  
 	          
-	        logger.log(Level.ALL, processId + this.logMe);  
+	        //logger.log(Level.ALL, processId + this.logMe);  
 	        log.info(this.processId + " - " + this.logMe);
-	        this.fileHandler.close();
+	        //this.fileHandler.close();
 	    } catch (SecurityException e) {  
 	        e.printStackTrace();  
-	    } catch (IOException e) {
+	    }
+	    /*
+	     catch (IOException e) {
 	    	e.printStackTrace();
 	    }
+	    */
 	}
 }
