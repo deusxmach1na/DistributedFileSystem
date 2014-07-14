@@ -50,12 +50,13 @@ public class UpdateMembershipListThread extends Thread {
 			//mark as deletable if it's been timeFail milliseconds
 			//DELETE
 			if((currentTime - compareTime) > timeFail && !key.equals(this.gs.getProcessId())) {
-				if(!member.isContact()) {
+				//if(!member.isContact()) {
 					//LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#PROCESS_FAILING#" + key);
 					//lt.start();
-				}
+				//}
 				member.setDeletable(true);
-				this.gs.startRMIServer(this.gs.getDfsServer());
+				FailRecoveryThread frt = new FailRecoveryThread(this.gs);
+				frt.start();
 				//System.out.println(key + " DELETE");
 			}	
 			
@@ -70,13 +71,15 @@ public class UpdateMembershipListThread extends Thread {
 			if((currentTime - compareTime) > 2 * timeFail && member.isDeletable() && member.isHasLeft()) {
 				//if its the contact server that left keep sending to it occasionally
 				if(!member.isContact()) {
-					this.gs.startRMIServer(this.gs.getDfsServer());
+					FailRecoveryThread frt = new FailRecoveryThread(this.gs);
+					frt.start();
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#PROCESS_LEFT_VOLUNTARILY#" + key);
 					lt.start();	
 					this.gs.getMembershipList().removeMember(key);
 				}
 				else if(currentTime - compareTime <= 3 * timeFail) {
-					this.gs.startRMIServer(this.gs.getDfsServer());
+					FailRecoveryThread frt = new FailRecoveryThread(this.gs);
+					frt.start();
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#CONTACT_LEFT_VOLUNTARILY#" + key);
 					lt.start();	
 				}
@@ -86,14 +89,16 @@ public class UpdateMembershipListThread extends Thread {
 			//REMOVE
 			if((currentTime - compareTime) > 2 * timeFail && member.isDeletable() && !member.isHasLeft()) {
 				if(!member.isContact()) {
-					this.gs.startRMIServer(this.gs.getDfsServer());
+					FailRecoveryThread frt = new FailRecoveryThread(this.gs);
+					frt.start();
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#REMOVED_FAILED_PROCESS#" + key);
 					lt.start();	
 					this.gs.getMembershipList().removeMember(key);
 				}
 				//System.out.println(key + " REMOVE");
-				else if((currentTime - compareTime) <= 3 * timeFail){
-					this.gs.startRMIServer(this.gs.getDfsServer());
+				else if((currentTime - compareTime) <= 3 * timeFail) {
+					FailRecoveryThread frt = new FailRecoveryThread(this.gs);
+					frt.start();
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#REMOVED_FAILED_CONTACT#" + key);
 					lt.start();	
 				}

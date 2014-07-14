@@ -12,6 +12,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
@@ -216,7 +217,6 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 	}
 
 	@Override
-	//
 	public void delete(String filename, boolean isFirstRun) throws RemoteException {
 		boolean isLastShard = false;
 		int filesFound = 0;
@@ -248,8 +248,6 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 					try {
 						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 						if(dfsServer.fileExists(fileToFind)) {
-							LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#DELETE_FILE#" + fileToFind);
-							lt.start();	 
 							dfsServer.delete(fileToFind, false);
 							if(!fileShardFound) {
 								filesFound++;
@@ -274,6 +272,8 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			
 		}
 		if (!isFirstRun){
+			LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#DELETE_FILE#" + filename);
+			lt.start();	 
 			File file = new File(filename);
 			file.delete();
 		}
@@ -317,5 +317,56 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			System.arraycopy(b, 0, result, a.length, b.length);
 		}
 		return result;
+	}
+
+	//FAILURE DETECTED
+	//rebalance system
+	public void rebalance() {
+		//pick a file
+		//then make sure there are at least replicationFactor copies
+
+		//Set<String> activeKeys = this.gs.getMembershipList().getActiveKeys();
+		File folder = new File(".");
+		File[] listOfFiles = folder.listFiles();
+		int replicationFactor = Integer.parseInt(this.gs.getProps().getProperty("replicationfactor"));
+		
+		for(int i=0;i<listOfFiles.length;i++) {
+			//get a list of all files
+			if(listOfFiles[i].isFile()) {
+				//turn it into a byte array
+				Path path = Paths.get(listOfFiles[i].toString());
+				byte[] file = null;
+				try {
+					file = Files.readAllBytes(path);
+				} catch (IOException e) {
+					System.out.println("could not turn file into bytes");
+					e.printStackTrace();
+				}
+				String potentialProcess = this.gs.getSendToProcess(listOfFiles[i].toString());
+				//see how many times the file is replicated
+				for(int j=0;j<replicationFactor;j++) {
+					int replicationCount = 1;  //the current server has a copy
+					DFSServerInterface dfsServer = null;
+					String rmiServer = getRMIHostname(potentialProcess);
+					try {
+						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
+						if(!dfsServer.fileExists(listOfFiles[i].toString())) {
+							dfsServer.put(listOfFiles[i].toString(), file, false);
+						}
+						replicationCount++;
+						if(replicationCount == replicationFactor) {
+							break; //we've replicated enough times
+						}
+						potentialProcess = this.gs.getMembershipList().getMember(potentialProcess).getSuccessor();
+					} catch (MalformedURLException e) {
+						e.printStackTrace();
+					} catch (NotBoundException e) {
+						e.printStackTrace();
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}	
 	}
 }

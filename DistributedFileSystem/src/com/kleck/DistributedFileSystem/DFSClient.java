@@ -50,7 +50,12 @@ public class DFSClient {
 					if(!fileCheck)
 						System.out.println("Could not find local file " + command.split(" ")[1]);
 					else {
+						long commandStart = System.currentTimeMillis();
 						spinUpThreads(command);
+						long commandEnd = System.currentTimeMillis();
+						System.out.println("*********************");
+						System.out.println("**Put Time = " + (commandEnd - commandStart));
+						System.out.println("*********************");
 					}
 				}
 			}
@@ -60,7 +65,12 @@ public class DFSClient {
 					this.printUsage();
 				}
 				else {
+					long commandStart = System.currentTimeMillis();
 					spinUpThreads(command);
+					long commandEnd = System.currentTimeMillis();
+					System.out.println("*********************");
+					System.out.println("**Get Time = " + (commandEnd - commandStart));
+					System.out.println("*********************");
 				}
 			}
 			else if(command.split(" ")[0].equals("delete")) {

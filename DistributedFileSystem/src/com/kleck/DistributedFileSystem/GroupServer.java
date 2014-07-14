@@ -94,6 +94,7 @@ public class GroupServer extends Thread {
 					scheduledThreadPool.shutdown();
 					
 					this.ml.getMember(this.processId).setHasLeft(true);
+					this.ml.getMember(this.processId).setMaster(false);
 					UpdateHeartbeatThread lastHeartbeat = new UpdateHeartbeatThread(this);
 					RandomGossipThread lastGossip = new RandomGossipThread(this);
 					lastGossip.start();
@@ -327,5 +328,9 @@ public class GroupServer extends Thread {
 
 	public void setDfsServer(DFSServer dfsServer) {
 		this.dfsServer = dfsServer;
+	}
+
+	public void replicateFiles() {
+		this.dfsServer.rebalance();
 	}
 }
