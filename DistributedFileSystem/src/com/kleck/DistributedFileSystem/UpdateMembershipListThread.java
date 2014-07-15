@@ -17,6 +17,7 @@ public class UpdateMembershipListThread extends Thread {
 	
 	public void run() {
 		int contactServers = 0;	
+		boolean needsRebalance = false;
 		
 		
 		//if there are multiple contact servers stop trying to communicate with the one that left
@@ -54,15 +55,19 @@ public class UpdateMembershipListThread extends Thread {
 					//LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#PROCESS_FAILING#" + key);
 					//lt.start();
 				//}
+				
+				//if its not marked deletable yet then do a preemptive rebalance
+				if(!(member.isDeletable() || member.isHasLeft())) {
+					needsRebalance = true;
+				}
 				member.setDeletable(true);
-				FailRecoveryThread frt = new FailRecoveryThread(this.gs);
-				frt.start();
 				//System.out.println(key + " DELETE");
 			}	
 			
 			//mark as do NOT DELETE if it has responded
 			if((currentTime - compareTime) <= timeFail) {
 				member.setDeletable(false);
+				//this.gs.getMembershipList().setMaster();
 			}
 			
 			
@@ -71,15 +76,13 @@ public class UpdateMembershipListThread extends Thread {
 			if((currentTime - compareTime) > 2 * timeFail && member.isDeletable() && member.isHasLeft()) {
 				//if its the contact server that left keep sending to it occasionally
 				if(!member.isContact()) {
-					FailRecoveryThread frt = new FailRecoveryThread(this.gs);
-					frt.start();
+					needsRebalance = true;
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#PROCESS_LEFT_VOLUNTARILY#" + key);
 					lt.start();	
 					this.gs.getMembershipList().removeMember(key);
 				}
 				else if(currentTime - compareTime <= 3 * timeFail) {
-					FailRecoveryThread frt = new FailRecoveryThread(this.gs);
-					frt.start();
+					needsRebalance = true;
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#CONTACT_LEFT_VOLUNTARILY#" + key);
 					lt.start();	
 				}
@@ -89,20 +92,22 @@ public class UpdateMembershipListThread extends Thread {
 			//REMOVE
 			if((currentTime - compareTime) > 2 * timeFail && member.isDeletable() && !member.isHasLeft()) {
 				if(!member.isContact()) {
-					FailRecoveryThread frt = new FailRecoveryThread(this.gs);
-					frt.start();
+					needsRebalance = true;
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#REMOVED_FAILED_PROCESS#" + key);
 					lt.start();	
 					this.gs.getMembershipList().removeMember(key);
 				}
 				//System.out.println(key + " REMOVE");
 				else if((currentTime - compareTime) <= 3 * timeFail) {
-					FailRecoveryThread frt = new FailRecoveryThread(this.gs);
-					frt.start();
+					needsRebalance = true;
 					LoggerThread lt = new LoggerThread(this.gs.getProcessId(), "#REMOVED_FAILED_CONTACT#" + key);
 					lt.start();	
 				}
 			}		
+		}
+		if(needsRebalance) {
+			FailRecoveryThread frt = new FailRecoveryThread(this.gs);
+			frt.start();
 		}
 		//this.gs.updateSuccessors();
 		/*

@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -15,7 +16,7 @@ public class MembershipList implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private ConcurrentHashMap<String, MembershipListRow> ml;
+	private Map<String, MembershipListRow> ml;
 	
 	public MembershipList() {
 		this.ml = new ConcurrentHashMap<String, MembershipListRow>();	

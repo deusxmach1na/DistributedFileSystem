@@ -85,7 +85,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			//append a digit to the filename then save 1 copy on the correct node
 			//then store another copy on the each nodes successor
 			for(int i=0;i<files.size();i++) {
-				String newFile = filename + i;
+				String newFile = i + filename + i;
 				String sentToProcess = this.gs.getSendToProcess(newFile);
 				//System.out.println("rep factor " + replicationFactor + sentToProcess);
 				
@@ -164,7 +164,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			while(!isLastShard) {
 				//calculate the hash of the filename and ask the appropriate
 				//server if they have the filename, if not try the successor
-				String fileToFind = filename + i;
+				String fileToFind = i + filename + i;
 				String potentialProcess = this.gs.getSendToProcess(fileToFind);
 				
 				//loop through all the potential processes so you can find the right file
@@ -235,7 +235,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 			while(!isLastShard) {
 				//calculate the hash of the filename and ask the appropriate
 				//server if they have the filename, if not try the successor
-				String fileToFind = filename + i;
+				String fileToFind = i + filename + i;
 				String potentialProcess = this.gs.getSendToProcess(fileToFind);
 				boolean fileShardFound = false;
 				
@@ -360,7 +360,7 @@ public class DFSServer extends UnicastRemoteObject implements DFSServerInterface
 					} catch (MalformedURLException e) {
 						e.printStackTrace();
 					} catch (NotBoundException e) {
-						e.printStackTrace();
+						//e.printStackTrace();
 					} catch (RemoteException e) {
 						e.printStackTrace();
 					}

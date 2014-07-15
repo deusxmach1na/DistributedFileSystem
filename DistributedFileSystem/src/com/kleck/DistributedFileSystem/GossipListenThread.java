@@ -61,12 +61,14 @@ public class GossipListenThread extends Thread {
 					//System.out.println(this.gs.getMembershipList().toString());
 					mmlt.start();
 				}
+				/*
 				if(temp instanceof ElectionMessage) {
 					ElectionMessage em = (ElectionMessage) temp;
 					HandleElectionMessageThread hemt = new HandleElectionMessageThread(em, this.gs);
 					hemt.start();
 					//System.out.println("here");
 				}
+				*/
 				//System.out.println("RECEIVED: " +  ml.toString());
 				//else if(temp instanceof ElectionMessage) {
 					

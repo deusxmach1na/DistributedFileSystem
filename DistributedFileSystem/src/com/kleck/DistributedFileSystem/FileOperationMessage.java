@@ -3,7 +3,7 @@ package com.kleck.DistributedFileSystem;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class ElectionMessage implements Serializable {
+public class FileOperationMessage implements Serializable {
 	/**
 	 * 
 	 */
@@ -13,7 +13,7 @@ public class ElectionMessage implements Serializable {
 	private boolean isCoordinator;
 	private Long winningProcess;
 	
-	public ElectionMessage(String processId, boolean isCoord) {
+	public FileOperationMessage(String processId, boolean isCoord) {
 		this.processIdList = new ArrayList<Long>();
 		this.setInitiator(processId);
 		this.setCoordinator(isCoord);

@@ -54,7 +54,7 @@ public class DFSClient {
 						spinUpThreads(command);
 						long commandEnd = System.currentTimeMillis();
 						System.out.println("*********************");
-						System.out.println("**Put Time = " + (commandEnd - commandStart));
+						System.out.println("**Put Time = " + (commandEnd - commandStart) + " milliseconds.");
 						System.out.println("*********************");
 					}
 				}
@@ -69,7 +69,7 @@ public class DFSClient {
 					spinUpThreads(command);
 					long commandEnd = System.currentTimeMillis();
 					System.out.println("*********************");
-					System.out.println("**Get Time = " + (commandEnd - commandStart));
+					System.out.println("**Get Time = " + (commandEnd - commandStart) + " milliseconds.");
 					System.out.println("*********************");
 				}
 			}
