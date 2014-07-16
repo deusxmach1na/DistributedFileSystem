@@ -284,9 +284,8 @@ public class GroupServer extends Thread {
 	public void replicateFiles() {
 		//talk to your file server and tell it to rebalance
 		//just re-use a client thread
-		int portNumber = Integer.parseInt(this.props.getProperty("servers").split(",")[2]);
-		DFSClientThread dct = new DFSClientThread(this.ipAddress, portNumber, "rebalance", 
-				FileServerProtocol.formCommand("reb", "none", true, null));
+		DFSClientThread dct = new DFSClientThread(this.ipAddress, this.filePortNumber, "rebalance none", 
+				FileServerProtocol.formCommand("reb", "none", true, new String("").getBytes()));
 		dct.start();
 	}
 }
