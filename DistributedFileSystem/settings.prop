@@ -8,4 +8,7 @@ timeUpdateHeartbeat=500
 timeUpdateList=900
 shardsize=1048576
 replicationfactor=2
-servers=localhost,6665;localhost,6667;localhost,6669;localhost,6671;
+
+#servers needs 3 items
+#ipaddress,gossipPort,fileOperationsPort
+servers=localhost,6665,6666;localhost,6667,6668;localhost,6669,6670;localhost,6671,6672;

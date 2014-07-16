@@ -6,7 +6,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -51,7 +55,15 @@ public class DFSClient {
 						System.out.println("Could not find local file " + command.split(" ")[1]);
 					else {
 						long commandStart = System.currentTimeMillis();
-						spinUpThreads(command);
+						Path path = Paths.get(command.split(" ")[1]);
+						byte[] data = null;
+						try {
+							data = Files.readAllBytes(path);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						spinUpThreads(this.formCommand("put", command.split(" ")[2], true, data), "put none");
 						long commandEnd = System.currentTimeMillis();
 						System.out.println("*********************");
 						System.out.println("**Put Time = " + (commandEnd - commandStart) + " milliseconds.");
@@ -66,7 +78,7 @@ public class DFSClient {
 				}
 				else {
 					long commandStart = System.currentTimeMillis();
-					spinUpThreads(command);
+					spinUpThreads(this.formCommand("get", command.split(" ")[1], true, new String("").getBytes()), "get " + command.split(" ")[2]);
 					long commandEnd = System.currentTimeMillis();
 					System.out.println("*********************");
 					System.out.println("**Get Time = " + (commandEnd - commandStart) + " milliseconds.");
@@ -74,27 +86,47 @@ public class DFSClient {
 				}
 			}
 			else if(command.split(" ")[0].equals("delete")) {
-				spinUpThreads(command);
+				spinUpThreads(this.formCommand("del", command.split(" ")[1], true, new String("").getBytes()), "del none");
 			}
 		}	
 	}
 	
-	private void spinUpThreads (String command) {
+	//turns the command into a byte array
+	private byte[] formCommand(String commandType, String filename, boolean b, byte[] data) {
+		byte[] result = new byte[data.length + 64];
+		byte[] com = new byte[16];
+		com = Arrays.copyOf(commandType.getBytes(), 16);
+		byte[] file = new byte[32];
+		file = Arrays.copyOf(filename.getBytes(), 32);
+		byte[] isFirst = new byte[16];
+		if(b)
+			isFirst = Arrays.copyOf(new String("true").getBytes(), 16);
+		else
+			isFirst = Arrays.copyOf(new String("false").getBytes(), 16);
+		
+		//System.out.println(file.length);
+		System.arraycopy(com, 0, result, 0, 16);
+		System.arraycopy(isFirst, 0, result, 16, 16);
+		System.arraycopy(file, 0, result, 32, 32);
+		System.arraycopy(data, 0, result, 64, data.length);
+		//result = this.concatenateByte(com, file);
+		//result = this.concatenateByte(result, isFirst);
+		//result = this.concatenateByte(result, data);
+		return result;
+	}
+	
+	private void spinUpThreads (byte[] bs, String command) {
 		List<DFSClientThread> sends = new ArrayList<DFSClientThread>();
 		String[] hosts = prop.getProperty("servers").split(";");
 		
 		//get a list of the servers and ports
 	    for(int i=0;i<hosts.length;i++) {
 	    	String[] host = hosts[i].split(",");
-	    	if(!host[0].equals("") && !host[1].equals("")) {
+	    	if(!host[0].equals("") && !host[2].equals("")) {
 	    		//"rmi://localhost/DFSServer"
 	    		String ipAddress = host[0];
-	    		if(ipAddress.equals("127.0.0.1")) {
-	    			ipAddress = "localhost";
-	    		}
-	    		String rmiServer = "rmi://" + host[0] + "/" + ipAddress + host[1];
-	    		//System.out.println(rmiServer);
-	            sends.add(new DFSClientThread(rmiServer, command));
+	    		int portNumber = Integer.parseInt(host[2]);
+	    		sends.add(new DFSClientThread(ipAddress, portNumber, command, bs));
 	            sends.get(i).start();	
 	    	}
 	    }	        
@@ -145,6 +177,24 @@ public class DFSClient {
 		System.out.println("put <localfilename> <sdfsfilename>");
 		System.out.println("get <sdfsfilename> <localfilename>");
 		System.out.println("delete <sdfsfilename>");
+	}
+	
+	//concat bytes
+	public byte[] concatenateByte (byte[] a, byte[] b) {
+		byte[] result;
+		if(a == null) {
+			result = new byte[b.length];
+			// copy b to result
+			System.arraycopy(b, 0, result, 0, b.length);
+		}
+		else {
+			result = new byte[a.length + b.length];
+			// copy a to result
+			System.arraycopy(a, 0, result, 0, a.length);
+			// copy b to result
+			System.arraycopy(b, 0, result, a.length, b.length);
+		}
+		return result;
 	}
 
 }

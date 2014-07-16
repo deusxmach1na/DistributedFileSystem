@@ -5,9 +5,9 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 //stores the membershiplist for 1 process
 //access by processId
@@ -16,7 +16,7 @@ public class MembershipList implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private Map<String, MembershipListRow> ml;
+	private ConcurrentMap<String, MembershipListRow> ml;
 	
 	public MembershipList() {
 		this.ml = new ConcurrentHashMap<String, MembershipListRow>();	

@@ -1,76 +1,110 @@
 package com.kleck.DistributedFileSystem;
 
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.Path;
-import java.io.FileNotFoundException;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.rmi.ConnectException;
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ConnectException;
+import java.net.Socket;
 
 public class DFSClientThread extends Thread {
-	private DFSServerInterface dfsServer;
-	private String rmiServer;
-	private String command;
+	private String ipAddress;
+	private int portNumber;
+	private String commandType;
+	private byte[] data;
+	private String fileToSaveAs;
 	
-	public DFSClientThread(String rmiServer, String command) { 
-		this.rmiServer = rmiServer;
-		this.command = command;
+	
+	public DFSClientThread(String ipAddress, int portNumber, String command, byte[] data) {
+		this.ipAddress = ipAddress;
+		this.portNumber = portNumber;
+		this.commandType = command.split(" ")[0];
+		this.fileToSaveAs = command.split(" ")[1];
+		this.data = data;
 	}
-	
+
 	public void run() {		
-		//sets security so you can connect to rmi
-		//"rmi://localhost/DFSServer"
-		System.setProperty("java.security.policy","security.policy");
 		
-		//set the DFS master initially
+		//open a socket to the server and send data
 		try {
-			//System.out.println(Naming.list(rmiServer).toString());
-			this.dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
 			//get the user command (put, get, delete)		
-			if(command.split(" ")[0].equals("put")) {
+			if(this.commandType.equals("put")) {
 				//System.out.println("issuing put to server");
-				Path pathToFile = Paths.get(command.split(" ")[1]);
-				this.dfsServer.put(command.split(" ")[2], Files.readAllBytes(pathToFile), true);
+				Socket dlSocket = new Socket(this.ipAddress, this.portNumber);
+				OutputStream out = dlSocket.getOutputStream();
+				DataOutputStream dos = new DataOutputStream(out);
+				dos.writeInt(this.data.length);
+				dos.write(this.data);
+				
+				InputStream in = dlSocket.getInputStream();
+				DataInputStream dis = new DataInputStream(in);
+				int len = dis.readInt();
+			    byte[] data = new byte[len];
+			    if (len > 0) {
+			        dis.readFully(data);
+			    }
+				System.out.println(new String(data));
+				dlSocket.close();
 			}
-			if(command.split(" ")[0].equals("get")) {
-				byte[] fileToSave = this.dfsServer.get(command.split(" ")[1], true); //fix me
-				FileOutputStream fos;
-				fos = new FileOutputStream("FromDFS/" + command.split(" ")[2]);
-				fos.write(fileToSave);
+			if(this.commandType.equals("get")) {
+				
+				//go get the files we need
+				Socket dlSocket = new Socket(this.ipAddress, this.portNumber);
+				OutputStream out = dlSocket.getOutputStream();
+				DataOutputStream dos = new DataOutputStream(out);
+				dos.writeInt(this.data.length);
+				dos.write(this.data);
+				
+				InputStream in = dlSocket.getInputStream();
+				DataInputStream dis = new DataInputStream(in);
+				int len = dis.readInt();
+			    byte[] data = new byte[len];
+			    if (len > 0) {
+			        dis.readFully(data);
+			    }
+				FileOutputStream fos = new FileOutputStream("FromDFS/" + this.fileToSaveAs);
+				fos.write(data);
 				fos.close();
+				dlSocket.close();
 			}
+			if(this.commandType.equals("del")) {
+				//System.out.println("issuing del to server");
+				Socket dlSocket = new Socket(this.ipAddress, this.portNumber);
+				OutputStream out = dlSocket.getOutputStream();
+				DataOutputStream dos = new DataOutputStream(out);
+				dos.writeInt(this.data.length);
+				dos.write(this.data);
+				
+				InputStream in = dlSocket.getInputStream();
+				DataInputStream dis = new DataInputStream(in);
+				int len = dis.readInt();
+			    byte[] data = new byte[len];
+			    if (len > 0) {
+			        dis.readFully(data);
+			    }
+				System.out.println(new String(data));
+				dlSocket.close();
+			}
+			/*
 			else if(command.split(" ")[0].equals("delete")) {
 				this.dfsServer.delete(command.split(" ")[1], true);
 			}		
+			*/
 		} catch (ConnectException e) {
 			//issue connecting to server assume it failed
 			//e.printStackTrace();	
 			Thread.currentThread().interrupt();
 			return;	
-		} catch (NullPointerException e) {
+		} catch (EOFException e) {
 			//issue connecting to server assume it failed
-			//e.printStackTrace();
+			//e.printStackTrace();	
+			System.out.println("DFS file not found.");
 			Thread.currentThread().interrupt();
-			return;
-		} catch (NotBoundException e) {
-			//could not find the server it must have failed
-			//e.printStackTrace();
-			Thread.currentThread().interrupt();
-			return;
-		} catch (RemoteException e) {
-			e.printStackTrace();
-			//Thread.currentThread().interrupt();
-			//return;
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			return;	
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

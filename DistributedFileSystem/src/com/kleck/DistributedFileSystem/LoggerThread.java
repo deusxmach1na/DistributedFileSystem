@@ -31,7 +31,7 @@ public class LoggerThread extends Thread {
 	        //logger.setLevel(Level.ALL);  
 	        //SimpleFormatter formatter = new SimpleFormatter();  
 	        //fileHandler.setFormatter(formatter);  
-	          
+	        //System.out.println(this.processId + " - " + this.logMe);
 	        //logger.log(Level.ALL, processId + this.logMe);  
 	        log.info(this.processId + " - " + this.logMe);
 	        //this.fileHandler.close();
