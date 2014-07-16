@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -91,6 +92,7 @@ public class FileServerProtocol {
 						byte[] command = FileServerProtocol.formCommand("put", newFile, false, files.get(i));
 						OutputStream out = dlSocket.getOutputStream();
 						DataOutputStream dos = new DataOutputStream(out);
+						//this.fs.getGs().updateBytesUsed(command.length);
 						dos.writeInt(command.length);
 						dos.write(command);
 						dlSocket.close();
@@ -160,6 +162,7 @@ public class FileServerProtocol {
 						byte[] command = FileServerProtocol.formCommand("get", fileToFind, false, "".getBytes());
 						OutputStream out = dlSocket.getOutputStream();
 						DataOutputStream dos = new DataOutputStream(out);
+						//this.fs.getGs().updateBytesUsed(command.length);
 						dos.writeInt(command.length);
 						dos.write(command);
 						
@@ -167,6 +170,7 @@ public class FileServerProtocol {
 						InputStream in = dlSocket.getInputStream();
 						DataInputStream dis = new DataInputStream(in);
 						int len = dis.readInt();
+						this.fs.getGs().updateBytesUsed(len);
 					    byte[] data = new byte[len];
 					    //file found
 					    if (len > 0) {
@@ -266,6 +270,7 @@ public class FileServerProtocol {
 						byte[] command = FileServerProtocol.formCommand("del", fileToFind, false, "".getBytes());
 						OutputStream out = dlSocket.getOutputStream();
 						DataOutputStream dos = new DataOutputStream(out);
+						//this.fs.getGs().updateBytesUsed(command.length);
 						dos.writeInt(command.length);
 						dos.write(command);
 						
@@ -390,6 +395,7 @@ public class FileServerProtocol {
 		//pick a file
 		//then make sure there are at least replicationFactor copies
 		byte[] result = null;
+		//long currentTime = System.currentTimeMillis();
 		//Set<String> activeKeys = this.gs.getMembershipList().getActiveKeys();
 		File folder = new File(".");
 		File[] listOfFiles = folder.listFiles();
@@ -414,7 +420,8 @@ public class FileServerProtocol {
 				//see how many times the file is replicated
 				for(int j=0;j<replicationFactor;j++) {
 					serverCount++;
-					if(potentialProcess.equals(this.fs.getGs().getProcessId())) {
+					if(!potentialProcess.equals(this.fs.getGs().getProcessId())) {
+						//System.out.println("replication here");
 						String hostname = this.fs.getGs().getMembershipList().getMember(potentialProcess).getIpAddress();
 						int portNumber = this.fs.getGs().getMembershipList().getMember(potentialProcess).getFilePortNumber();
 						//start a new socket and send a get
@@ -424,9 +431,10 @@ public class FileServerProtocol {
 							//System.out.println(hostname);
 							//System.out.println(portNumber);
 							dlSocket = new Socket(hostname, portNumber);
-							byte[] command = FileServerProtocol.formCommand("get", listOfFiles[i].toString(), false, null);
+							byte[] command = FileServerProtocol.formCommand("get", listOfFiles[i].toString(), false, "".getBytes());
 							OutputStream out = dlSocket.getOutputStream();
 							DataOutputStream dos = new DataOutputStream(out);
+							//this.fs.getGs().updateBytesUsed(command.length);
 							dos.writeInt(command.length);
 							dos.write(command);
 							dos.flush();
@@ -435,18 +443,33 @@ public class FileServerProtocol {
 							InputStream in = dlSocket.getInputStream();
 							DataInputStream dis = new DataInputStream(in);
 							int len = dis.readInt();
+							//System.out.println("rebalance here");
+						    dis.close();
+							dlSocket.close();
 						    //file found
 						    if (len > 0) {
+								//System.out.println("rebalance no put");
 						    	replicationCount ++;
 						    }
 						    else {
 						    	//put the file
-						    	//System.out.println("output files");
+						    	//System.out.println("put files");
+								//System.out.println("rebalance put");
+								Socket dlSocket2 = new Socket(hostname, portNumber);
+								OutputStream out2 = dlSocket2.getOutputStream();
+								DataOutputStream dos2 = new DataOutputStream(out2);
+								
 								command = FileServerProtocol.formCommand("put", listOfFiles[i].toString(), false, file);
+								//this.fs.getGs().updateBytesUsed(command.length);
+								dos2.writeInt(command.length);
+								dos2.write(command);
+								dos2.flush();
+								dlSocket2.close();
 								replicationCount ++;
 						    }
-							dlSocket.close();
 						} catch (UnknownHostException e) {
+							e.printStackTrace();
+						} catch (SocketException e) {
 							e.printStackTrace();
 						} catch (IOException e) {
 							e.printStackTrace();
@@ -460,6 +483,10 @@ public class FileServerProtocol {
 			}
 		}
 		result = "Rebalance Complete".getBytes();
+		//long runTime = System.currentTimeMillis();
+		//System.out.println("***********************");
+		//System.out.println("** Replication took " + (runTime - currentTime) + " milliseconds.**");
+		//System.out.println("***********************");
 		return result;
 	}	
 }

@@ -126,5 +126,6 @@ public class UpdateMembershipListThread extends Thread {
 			set.start();
 		}
 		*/
+		this.gs.updateRunTime();
 	}
 }

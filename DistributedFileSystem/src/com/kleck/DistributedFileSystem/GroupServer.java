@@ -23,7 +23,7 @@ public class GroupServer extends Thread {
 	private String ipAddress;
 	private MembershipList ml;
 	private int bytesused;
-	private long runtime;
+	//private long runtime;
 	private long starttime;
 	private int portNumber;
 	private int filePortNumber;
@@ -41,7 +41,7 @@ public class GroupServer extends Thread {
 		this.ml = new MembershipList();
 		this.props = loadParams();
 		this.bytesused = 0;
-		this.runtime = 0;
+		//this.runtime = 0;
 		this.starttime = System.currentTimeMillis();
 		
 		try {
@@ -249,20 +249,16 @@ public class GroupServer extends Thread {
 	public int getBytesUsed() {
 		return bytesused;
 	}
-
-
 	public void updateBytesUsed(int bytesused) {
 		this.bytesused += bytesused;
 	}
-
-
 	public void updateRunTime() {
-		this.runtime = System.currentTimeMillis() - this.starttime;
-		System.out.println("*********************");
-		System.out.println("**BANDWIDTH = " + this.bytesused * 1.000 / (this.runtime / 1000));
-		System.out.println("*********************");
-		System.out.println(this.bytesused);
-		System.out.println(this.runtime);
+		//this.runtime = System.currentTimeMillis() - this.starttime;
+		//System.out.println("*********************");
+		//System.out.println("**BANDWIDTH = " + this.bytesused * 1.000 / (this.runtime / 1000));
+		//System.out.println("*********************");
+		//System.out.println(this.bytesused);
+		//System.out.println(this.runtime);
 	}
 
 	public Properties getProps() {
@@ -285,7 +281,7 @@ public class GroupServer extends Thread {
 	public void replicateFiles() {
 		//talk to your file server and tell it to rebalance
 		//just re-use a client thread
-		DFSClientThread dct = new DFSClientThread(this.ipAddress, this.filePortNumber, "rebalance none", 
+		DFSClientThread dct = new DFSClientThread(this.ipAddress, this.filePortNumber, "reb none", 
 				FileServerProtocol.formCommand("reb", "none", true, "".getBytes()));
 		dct.start();
 	}

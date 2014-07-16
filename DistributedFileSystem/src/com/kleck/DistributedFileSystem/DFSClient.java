@@ -54,20 +54,19 @@ public class DFSClient {
 					if(!fileCheck)
 						System.out.println("Could not find local file " + command.split(" ")[1]);
 					else {
-						long commandStart = System.currentTimeMillis();
+						//long commandStart = System.currentTimeMillis();
 						Path path = Paths.get(command.split(" ")[1]);
 						byte[] data = null;
 						try {
 							data = Files.readAllBytes(path);
 						} catch (IOException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						spinUpThreads(this.formCommand("put", command.split(" ")[2], true, data), "put none");
-						long commandEnd = System.currentTimeMillis();
-						System.out.println("*********************");
-						System.out.println("**Put Time = " + (commandEnd - commandStart) + " milliseconds.");
-						System.out.println("*********************");
+						//long commandEnd = System.currentTimeMillis();
+						//System.out.println("*********************");
+						//System.out.println("**Put Time = " + (commandEnd - commandStart) + " milliseconds.");
+						//System.out.println("*********************");
 					}
 				}
 			}
@@ -77,12 +76,12 @@ public class DFSClient {
 					this.printUsage();
 				}
 				else {
-					long commandStart = System.currentTimeMillis();
+					//long commandStart = System.currentTimeMillis();
 					spinUpThreads(this.formCommand("get", command.split(" ")[1], true, new String("").getBytes()), "get " + command.split(" ")[2]);
-					long commandEnd = System.currentTimeMillis();
-					System.out.println("*********************");
-					System.out.println("**Get Time = " + (commandEnd - commandStart) + " milliseconds.");
-					System.out.println("*********************");
+					//long commandEnd = System.currentTimeMillis();
+					//System.out.println("*********************");
+					//System.out.println("**Get Time = " + (commandEnd - commandStart) + " milliseconds.");
+					//System.out.println("*********************");
 				}
 			}
 			else if(command.split(" ")[0].equals("delete")) {

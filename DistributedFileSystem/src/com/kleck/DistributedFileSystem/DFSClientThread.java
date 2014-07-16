@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 public class DFSClientThread extends Thread {
 	private String ipAddress;
@@ -32,90 +33,16 @@ public class DFSClientThread extends Thread {
 		//open a socket to the server and send data
 		try {
 			//get the user command (put, get, delete)		
-			if(this.commandType.equals("put")) {
+			if(this.commandType.equals("put") || this.commandType.equals("del") || this.commandType.equals("reb")) {
 				//System.out.println("issuing put to server");
-				Socket dlSocket = new Socket(this.ipAddress, this.portNumber);
-				OutputStream out = dlSocket.getOutputStream();
-				DataOutputStream dos = new DataOutputStream(out);
-				dos.writeInt(this.data.length);
-				dos.write(this.data);
-				dos.flush();
-				
-				InputStream in = dlSocket.getInputStream();
-				DataInputStream dis = new DataInputStream(in);
-				int len = dis.readInt();
-			    byte[] data = new byte[len];
-			    if (len > 0) {
-			        dis.readFully(data);
-			    }
-				//System.out.println(new String(data));
-				dlSocket.close();
+				getServerResponse();
 			}
-			if(this.commandType.equals("get")) {
-				
-				//go get the files we need
-				Socket dlSocket = new Socket(this.ipAddress, this.portNumber);
-				OutputStream out = dlSocket.getOutputStream();
-				DataOutputStream dos = new DataOutputStream(out);
-				dos.writeInt(this.data.length);
-				dos.write(this.data);
-				dos.flush();
-				
-				InputStream in = dlSocket.getInputStream();
-				DataInputStream dis = new DataInputStream(in);
-				int len = dis.readInt();
-			    byte[] data = new byte[len];
-			    if (len > 0) {
-			        dis.readFully(data);
-			    }
+			else if(this.commandType.equals("get")) {
+				//save the file
 				FileOutputStream fos = new FileOutputStream("FromDFS/" + this.fileToSaveAs);
-				fos.write(data);
+				fos.write(this.getServerResponse());
 				fos.close();
-				dlSocket.close();
 			}
-			if(this.commandType.equals("del")) {
-				//System.out.println("issuing del to server");
-				Socket dlSocket = new Socket(this.ipAddress, this.portNumber);
-				OutputStream out = dlSocket.getOutputStream();
-				DataOutputStream dos = new DataOutputStream(out);
-				dos.writeInt(this.data.length);
-				dos.write(this.data);
-				dos.flush();
-				
-				InputStream in = dlSocket.getInputStream();
-				DataInputStream dis = new DataInputStream(in);
-				int len = dis.readInt();
-			    byte[] data = new byte[len];
-			    if (len > 0) {
-			        dis.readFully(data);
-			    }
-				//System.out.println(new String(data));
-				dlSocket.close();
-			}
-			if(this.commandType.equals("reb")) {
-				//System.out.println("issuing del to server");
-				Socket dlSocket = new Socket(this.ipAddress, this.portNumber);
-				OutputStream out = dlSocket.getOutputStream();
-				DataOutputStream dos = new DataOutputStream(out);
-				dos.writeInt(this.data.length);
-				dos.write(this.data);
-				dos.flush();
-				
-				InputStream in = dlSocket.getInputStream();
-				DataInputStream dis = new DataInputStream(in);
-				int len = dis.readInt();
-			    byte[] data = new byte[len];
-			    if (len > 0) {
-			        dis.readFully(data);
-			    }
-				//System.out.println(new String(data));
-				dlSocket.close();
-			}
-			/*
-			else if(command.split(" ")[0].equals("delete")) {
-				this.dfsServer.delete(command.split(" ")[1], true);
-			}		
-			*/
 		} catch (ConnectException e) {
 			//issue connecting to server assume it failed
 			//e.printStackTrace();	
@@ -132,5 +59,26 @@ public class DFSClientThread extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	//opens a socket to the server and sends the command 
+	private byte[] getServerResponse() throws UnknownHostException, IOException {
+		Socket dlSocket = new Socket(this.ipAddress, this.portNumber);
+		OutputStream out = dlSocket.getOutputStream();
+		DataOutputStream dos = new DataOutputStream(out);
+		dos.writeInt(this.data.length);
+		dos.write(this.data);
+		dos.flush();
+		
+		InputStream in = dlSocket.getInputStream();
+		DataInputStream dis = new DataInputStream(in);
+		int len = dis.readInt();
+		byte[] result = new byte[len];
+		if (len > 0) {
+		    dis.readFully(result);
+		}
+		//System.out.println(new String(data));
+		dlSocket.close();
+		return result;
 	}
 }

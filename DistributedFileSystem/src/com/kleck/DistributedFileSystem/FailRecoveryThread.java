@@ -16,10 +16,6 @@ public class FailRecoveryThread extends Thread {
 		System.out.println("** Master Selection took " + (masterTime - currentTime) + " milliseconds.**");
 		System.out.println("***********************");
 		this.gs.replicateFiles();
-		long runTime = System.currentTimeMillis();
-		System.out.println("***********************");
-		System.out.println("** Replication took " + (runTime - currentTime) + " milliseconds.**");
-		System.out.println("***********************");
 		
 	}
 

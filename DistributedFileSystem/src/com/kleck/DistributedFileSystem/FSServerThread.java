@@ -63,7 +63,7 @@ public class FSServerThread extends Thread {
 			//System.out.println("herenow");
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			//System.out.println("herenow");
 		}
 	    //System.out.println("closing client socket on server");

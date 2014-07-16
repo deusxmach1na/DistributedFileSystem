@@ -13,11 +13,13 @@ public class GossipSendThread extends Thread{
 	private String ipAddress;
 	private int portNumber;
 	private Object gossipObject;
+	//private GroupServer gs;
 	
 	public GossipSendThread (String ipAddress, int portNumber, Object gossipObject) {
 		this.ipAddress = ipAddress;
 		this.portNumber = portNumber;
 		this.gossipObject = gossipObject;
+		//this.gs = gs;
 	}
 
 	public void run() {
