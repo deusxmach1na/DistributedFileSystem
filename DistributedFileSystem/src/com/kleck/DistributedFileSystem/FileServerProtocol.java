@@ -410,46 +410,49 @@ public class FileServerProtocol {
 				}
 				String potentialProcess = this.fs.getGs().getSendToProcess(listOfFiles[i].toString());
 				int replicationCount = 1;  //the current server has a copy
+				int serverCount = 1;
 				//see how many times the file is replicated
 				for(int j=0;j<replicationFactor;j++) {
-					String hostname = this.fs.getGs().getMembershipList().getMember(potentialProcess).getIpAddress();
-					int portNumber = this.fs.getGs().getMembershipList().getMember(potentialProcess).getFilePortNumber();
-					//start a new socket and send a get
-					//if it is empty then don't need to move the file
-					Socket dlSocket;
-					try {
-						//System.out.println(hostname);
-						//System.out.println(portNumber);
-						dlSocket = new Socket(hostname, portNumber);
-						byte[] command = FileServerProtocol.formCommand("get", listOfFiles[i].toString(), false, null);
-						OutputStream out = dlSocket.getOutputStream();
-						DataOutputStream dos = new DataOutputStream(out);
-						dos.writeInt(command.length);
-						dos.write(command);
-						dos.flush();
-
-						//get input
-						InputStream in = dlSocket.getInputStream();
-						DataInputStream dis = new DataInputStream(in);
-						int len = dis.readInt();
-					    //file found
-					    if (len > 0) {
-					    	replicationCount ++;
-					    }
-					    else {
-					    	//put the file
-					    	//System.out.println("output files");
-							command = FileServerProtocol.formCommand("put", listOfFiles[i].toString(), false, file);
-							replicationCount ++;
-					    }
-						dlSocket.close();
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					} 
-					
-					if(replicationCount == replicationFactor) {
+					serverCount++;
+					if(potentialProcess.equals(this.fs.getGs().getProcessId())) {
+						String hostname = this.fs.getGs().getMembershipList().getMember(potentialProcess).getIpAddress();
+						int portNumber = this.fs.getGs().getMembershipList().getMember(potentialProcess).getFilePortNumber();
+						//start a new socket and send a get
+						//if it is empty then don't need to move the file
+						Socket dlSocket;
+						try {
+							//System.out.println(hostname);
+							//System.out.println(portNumber);
+							dlSocket = new Socket(hostname, portNumber);
+							byte[] command = FileServerProtocol.formCommand("get", listOfFiles[i].toString(), false, null);
+							OutputStream out = dlSocket.getOutputStream();
+							DataOutputStream dos = new DataOutputStream(out);
+							dos.writeInt(command.length);
+							dos.write(command);
+							dos.flush();
+	
+							//get input
+							InputStream in = dlSocket.getInputStream();
+							DataInputStream dis = new DataInputStream(in);
+							int len = dis.readInt();
+						    //file found
+						    if (len > 0) {
+						    	replicationCount ++;
+						    }
+						    else {
+						    	//put the file
+						    	//System.out.println("output files");
+								command = FileServerProtocol.formCommand("put", listOfFiles[i].toString(), false, file);
+								replicationCount ++;
+						    }
+							dlSocket.close();
+						} catch (UnknownHostException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							e.printStackTrace();
+						} 
+					}
+					if(replicationCount == replicationFactor || serverCount == this.fs.getGs().getMembershipList().getActiveKeys().size()) {
 						break; //we've replicated enough times
 					}
 					potentialProcess = this.fs.getGs().getMembershipList().getMember(potentialProcess).getSuccessor();

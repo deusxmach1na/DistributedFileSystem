@@ -102,12 +102,13 @@ public class GroupServer extends Thread {
 					glt.setStop(true);
 					glt.getServer().close();
 					inFromUser.close();
+					System.exit(1);
 					break;
 				}
 				if(command.equals("print")) {
 					System.out.println("Membership List for " + this.getProcessId());					
 					
-					//clean up threads
+					//print membership list
 					System.out.println(this.getMembershipList().toString());
 				}
 				
