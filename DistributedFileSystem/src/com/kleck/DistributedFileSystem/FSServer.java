@@ -14,9 +14,9 @@ public class FSServer {
 	//spin up a new GroupServer for gossip
 	//LoggingServer constructor
 	//needs to take a portNumber and the server id
-	public FSServer(int portNumber, int gossipPort, int serverNumber, boolean isContact) {
+	public FSServer(int portNumber, int gossipPort, boolean isContact) {
 		this.portNumber = portNumber;
-		this.serverNumber = serverNumber;
+		//this.serverNumber = serverNumber;
 		this.gs = new GroupServer(gossipPort, isContact, portNumber);
 		this.gs.start();
 		this.gs.setFs(this);
@@ -42,25 +42,27 @@ public class FSServer {
 	//main method
 	//get args and spin up the Logging Server
 	public static void main (String args[]) {
-		int port = 6666;
 		int gossipPort = 6665;
-		int server = 1;
+		int port = 6666;
+		//int server = 1;
 		boolean isContact = false;
 		
 		//change port and server if args are passed
-		if(args.length == 4) {
-			port = Integer.parseInt(args[0]);
-			gossipPort = Integer.parseInt(args[1]);
-			server = Integer.parseInt(args[2]);
-			isContact = Boolean.parseBoolean(args[3]);
+		if(args.length == 3) {
+			gossipPort = Integer.parseInt(args[0]);
+			port = Integer.parseInt(args[1]);
+			//server = Integer.parseInt(args[2]);
+			isContact = Boolean.parseBoolean(args[2]);
 		}
-		if(args.length < 4) {
-			System.out.println("Using default port " + port + ", and default server Number " + server +".");
+		if(args.length < 3) {
+			System.out.println("Using default port " + port + " for file operations and " 
+					+ gossipPort + " for the gossip port.");
 		}
 		else {
-			System.out.println("Using custom port " + port + ", and server Number " + server + ".");
+			System.out.println("Using custom port " + port + " for file operations and " 
+					+ gossipPort + " for the gossip port.");
 		}
-		new FSServer(port, gossipPort, server, isContact);
+		new FSServer(port, gossipPort, isContact);
 	}
 
 	//what server is this

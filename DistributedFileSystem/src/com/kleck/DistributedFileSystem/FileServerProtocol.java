@@ -124,7 +124,7 @@ public class FileServerProtocol {
 	
 	
 	public byte[] get(String filename, boolean isFirstRun) {
-		System.out.println("entered get");
+		//System.out.println("entered get");
 		byte[] result = null;
 		//if you are the master you need to find all the file shards
 		//and re-assemble them
@@ -157,7 +157,7 @@ public class FileServerProtocol {
 						//System.out.println(hostname);
 						//System.out.println(portNumber);
 						dlSocket = new Socket(hostname, portNumber);
-						byte[] command = FileServerProtocol.formCommand("get", fileToFind, false, new String("").getBytes());
+						byte[] command = FileServerProtocol.formCommand("get", fileToFind, false, "".getBytes());
 						OutputStream out = dlSocket.getOutputStream();
 						DataOutputStream dos = new DataOutputStream(out);
 						dos.writeInt(command.length);
@@ -208,7 +208,7 @@ public class FileServerProtocol {
 		
 		//if you are not the master just return the file you are asked to get
 		if (!isFirstRun) {
-			System.out.println("getting file");
+			//System.out.println("getting file");
 			File f = new File(this.filename);
 			boolean isFound = f.exists() && !f.isDirectory();
 			if(isFound) {
@@ -225,7 +225,7 @@ public class FileServerProtocol {
 			else {
 				//return null
 				//System.out.println("null here");
-				result = new String("").getBytes();
+				result = "".getBytes();
 			}
 		}
 		return result;
@@ -263,7 +263,7 @@ public class FileServerProtocol {
 						//System.out.println(hostname);
 						//System.out.println(portNumber);
 						dlSocket = new Socket(hostname, portNumber);
-						byte[] command = FileServerProtocol.formCommand("del", fileToFind, false, new String("").getBytes());
+						byte[] command = FileServerProtocol.formCommand("del", fileToFind, false, "".getBytes());
 						OutputStream out = dlSocket.getOutputStream();
 						DataOutputStream dos = new DataOutputStream(out);
 						dos.writeInt(command.length);
@@ -293,7 +293,7 @@ public class FileServerProtocol {
 					isLastShard = true;  //breaks the while loop
 				}
 				i++;
-				result = new String("Delete Complete").getBytes();
+				result = "Delete Complete".getBytes();
 			}
 		}
 		//if you are not the master just return the file you are asked to get
@@ -311,7 +311,7 @@ public class FileServerProtocol {
 			else {
 				//return null
 				//System.out.println("null here");
-				result = new String("").getBytes();
+				result = "".getBytes();
 			}
 		}
 		//System.out.println("hello from delete");
@@ -368,9 +368,9 @@ public class FileServerProtocol {
 		file = Arrays.copyOf(filename.getBytes(), 32);
 		byte[] isFirst = new byte[16];
 		if(b)
-			isFirst = Arrays.copyOf(new String("true").getBytes(), 16);
+			isFirst = Arrays.copyOf("true".getBytes(), 16);
 		else
-			isFirst = Arrays.copyOf(new String("false").getBytes(), 16);
+			isFirst = Arrays.copyOf("false".getBytes(), 16);
 			
 		//System.out.println(file.length);
 		System.arraycopy(com, 0, result, 0, 16);
@@ -456,7 +456,7 @@ public class FileServerProtocol {
 				}
 			}
 		}
-		result = new String("Rebalance Complete").getBytes();
+		result = "Rebalance Complete".getBytes();
 		return result;
 	}	
 }

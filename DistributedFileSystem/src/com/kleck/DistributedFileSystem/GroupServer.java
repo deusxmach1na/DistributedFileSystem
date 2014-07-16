@@ -285,7 +285,7 @@ public class GroupServer extends Thread {
 		//talk to your file server and tell it to rebalance
 		//just re-use a client thread
 		DFSClientThread dct = new DFSClientThread(this.ipAddress, this.filePortNumber, "rebalance none", 
-				FileServerProtocol.formCommand("reb", "none", true, new String("").getBytes()));
+				FileServerProtocol.formCommand("reb", "none", true, "".getBytes()));
 		dct.start();
 	}
 }

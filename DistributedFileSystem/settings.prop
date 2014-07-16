@@ -6,6 +6,8 @@ timeFail=2000
 timeGossip=500
 timeUpdateHeartbeat=500
 timeUpdateList=900
+
+#shard size in bytes
 shardsize=1048576
 replicationfactor=2
 
