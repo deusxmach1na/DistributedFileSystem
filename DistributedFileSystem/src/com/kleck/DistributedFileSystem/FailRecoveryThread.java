@@ -9,14 +9,13 @@ public class FailRecoveryThread extends Thread {
 	
 	public void run() {
 		long currentTime = System.currentTimeMillis();
-		//this.gs.startRMIServer(this.gs.getDfsServer());
 		this.gs.getMembershipList().setMaster();
+		this.gs.getMembershipList().setSuccessors();
 		long masterTime = System.currentTimeMillis();
 		System.out.println("***********************");
 		System.out.println("** Master Selection took " + (masterTime - currentTime) + " milliseconds.**");
 		System.out.println("***********************");
-		this.gs.getMembershipList().setSuccessors();
-		//this.gs.replicateFiles();
+		this.gs.replicateFiles();
 		long runTime = System.currentTimeMillis();
 		System.out.println("***********************");
 		System.out.println("** Replication took " + (runTime - currentTime) + " milliseconds.**");

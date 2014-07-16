@@ -49,8 +49,8 @@ public class FileServerProtocol {
 		else if(command.trim().equals("del")) {
 			result = this.delete(filename, isFirst);
 		}
-		else if(command.trim().equals("fex")) {
-			result = this.fileExists(filename);
+		else if(command.trim().equals("reb")) {
+			result = this.rebalance();
 		}
 		
 		return result;
@@ -81,14 +81,14 @@ public class FileServerProtocol {
 				//store more on each successor
 				for(int j=0;j<replicationFactor;j++) {
 					String hostname = this.fs.getGs().getMembershipList().getMember(sentToProcess).getIpAddress();
-					int portNumber = this.fs.getGs().getMembershipList().getMember(sentToProcess).getPortNumber() + 1;
+					int portNumber = this.fs.getGs().getMembershipList().getMember(sentToProcess).getFilePortNumber();
 					//start a new socket and send the command
 					Socket dlSocket;
 					try {
 						//System.out.println(hostname);
 						//System.out.println(portNumber);
 						dlSocket = new Socket(hostname, portNumber);
-						byte[] command = this.formCommand(this.command, newFile, false, files.get(i));
+						byte[] command = FileServerProtocol.formCommand("put", newFile, false, files.get(i));
 						OutputStream out = dlSocket.getOutputStream();
 						DataOutputStream dos = new DataOutputStream(out);
 						dos.writeInt(command.length);
@@ -149,7 +149,7 @@ public class FileServerProtocol {
 				for(int j=0;j<replicationFactor;j++) {
 					//System.out.println(potentialProcess);
 					String hostname = this.fs.getGs().getMembershipList().getMember(potentialProcess).getIpAddress();
-					int portNumber = this.fs.getGs().getMembershipList().getMember(potentialProcess).getPortNumber() + 1;
+					int portNumber = this.fs.getGs().getMembershipList().getMember(potentialProcess).getFilePortNumber();
 					boolean exists = false;
 					//start a new socket and send the file exists command
 					Socket dlSocket;
@@ -157,7 +157,7 @@ public class FileServerProtocol {
 						//System.out.println(hostname);
 						//System.out.println(portNumber);
 						dlSocket = new Socket(hostname, portNumber);
-						byte[] command = this.formCommand("get", fileToFind, false, new String("").getBytes());
+						byte[] command = FileServerProtocol.formCommand("get", fileToFind, false, new String("").getBytes());
 						OutputStream out = dlSocket.getOutputStream();
 						DataOutputStream dos = new DataOutputStream(out);
 						dos.writeInt(command.length);
@@ -256,14 +256,14 @@ public class FileServerProtocol {
 				for(int j=0;j<this.fs.getGs().getMembershipList().getActiveKeys().size();j++) {
 					//System.out.println(potentialProcess);
 					String hostname = this.fs.getGs().getMembershipList().getMember(potentialProcess).getIpAddress();
-					int portNumber = this.fs.getGs().getMembershipList().getMember(potentialProcess).getPortNumber() + 1;
+					int portNumber = this.fs.getGs().getMembershipList().getMember(potentialProcess).getFilePortNumber();
 					//start a new socket and send the file exists command
 					Socket dlSocket;
 					try {
 						//System.out.println(hostname);
 						//System.out.println(portNumber);
 						dlSocket = new Socket(hostname, portNumber);
-						byte[] command = this.formCommand("del", fileToFind, false, new String("").getBytes());
+						byte[] command = FileServerProtocol.formCommand("del", fileToFind, false, new String("").getBytes());
 						OutputStream out = dlSocket.getOutputStream();
 						DataOutputStream dos = new DataOutputStream(out);
 						dos.writeInt(command.length);
@@ -276,10 +276,6 @@ public class FileServerProtocol {
 					    //file found
 					    if (len > 0) {
 					    	fileShardFound = true;
-					    }
-					    //file not found
-					    else {
-					    	fileShardFound = false;
 					    }
 						dlSocket.close();
 					} catch (UnknownHostException e) {
@@ -364,7 +360,7 @@ public class FileServerProtocol {
 	
 	
 	//turns the command into a byte array
-	private byte[] formCommand(String commandType, String filename, boolean b, byte[] data) {
+	public static byte[] formCommand(String commandType, String filename, boolean b, byte[] data) {
 		byte[] result = new byte[data.length + 64];
 		byte[] com = new byte[16];
 		com = Arrays.copyOf(commandType.getBytes(), 16);
@@ -387,21 +383,22 @@ public class FileServerProtocol {
 		return result;
 	}
 	
-/*
+
 	//FAILURE DETECTED
 	//rebalance system
-	public void rebalance() {
+	public byte[] rebalance() {
 		//pick a file
 		//then make sure there are at least replicationFactor copies
-
+		byte[] result = null;
 		//Set<String> activeKeys = this.gs.getMembershipList().getActiveKeys();
 		File folder = new File(".");
 		File[] listOfFiles = folder.listFiles();
-		int replicationFactor = Integer.parseInt(this.gs.getProps().getProperty("replicationfactor"));
+		int replicationFactor = Integer.parseInt(this.fs.getGs().getProps().getProperty("replicationfactor"));
 		
 		for(int i=0;i<listOfFiles.length;i++) {
 			//get a list of all files
-			if(listOfFiles[i].isFile()) {
+			//if it has PART_ in it then see how many times it's replicated
+			if(listOfFiles[i].isFile() && listOfFiles[i].toString().contains("PART_")) {
 				//turn it into a byte array
 				Path path = Paths.get(listOfFiles[i].toString());
 				byte[] file = null;
@@ -411,46 +408,55 @@ public class FileServerProtocol {
 					System.out.println("could not turn file into bytes");
 					e.printStackTrace();
 				}
-				String potentialProcess = this.gs.getSendToProcess(listOfFiles[i].toString());
+				String potentialProcess = this.fs.getGs().getSendToProcess(listOfFiles[i].toString());
+				int replicationCount = 1;  //the current server has a copy
 				//see how many times the file is replicated
 				for(int j=0;j<replicationFactor;j++) {
-					int replicationCount = 1;  //the current server has a copy
-					DFSServerInterface dfsServer = null;
-					String rmiServer = getRMIHostname(potentialProcess);
+					String hostname = this.fs.getGs().getMembershipList().getMember(potentialProcess).getIpAddress();
+					int portNumber = this.fs.getGs().getMembershipList().getMember(potentialProcess).getFilePortNumber();
+					//start a new socket and send a get
+					//if it is empty then don't need to move the file
+					Socket dlSocket;
 					try {
-						dfsServer = (DFSServerInterface) Naming.lookup(rmiServer);
-						if(!dfsServer.fileExists(listOfFiles[i].toString())) {
-							dfsServer.put(listOfFiles[i].toString(), file, false);
-						}
-						replicationCount++;
-						if(replicationCount == replicationFactor) {
-							break; //we've replicated enough times
-						}
-						potentialProcess = this.gs.getMembershipList().getMember(potentialProcess).getSuccessor();
-					} catch (MalformedURLException e) {
+						//System.out.println(hostname);
+						//System.out.println(portNumber);
+						dlSocket = new Socket(hostname, portNumber);
+						byte[] command = FileServerProtocol.formCommand("get", listOfFiles[i].toString(), false, null);
+						OutputStream out = dlSocket.getOutputStream();
+						DataOutputStream dos = new DataOutputStream(out);
+						dos.writeInt(command.length);
+						dos.write(command);
+						dos.flush();
+
+						//get input
+						InputStream in = dlSocket.getInputStream();
+						DataInputStream dis = new DataInputStream(in);
+						int len = dis.readInt();
+					    //file found
+					    if (len > 0) {
+					    	replicationCount ++;
+					    }
+					    else {
+					    	//put the file
+					    	//System.out.println("output files");
+							command = FileServerProtocol.formCommand("put", listOfFiles[i].toString(), false, file);
+							replicationCount ++;
+					    }
+						dlSocket.close();
+					} catch (UnknownHostException e) {
 						e.printStackTrace();
-					} catch (NotBoundException e) {
-						//e.printStackTrace();
-					} catch (RemoteException e) {
+					} catch (IOException e) {
 						e.printStackTrace();
+					} 
+					
+					if(replicationCount == replicationFactor) {
+						break; //we've replicated enough times
 					}
+					potentialProcess = this.fs.getGs().getMembershipList().getMember(potentialProcess).getSuccessor();
 				}
 			}
-		}	
-	}	
-*/
-	
-	/*
-	//get the hostname
-	private String getRMIHostname(String sentToProcess) {
-		String ipAddress = this.gs.getMembershipList().getMember(sentToProcess).getIpAddress();
-		if(ipAddress.equals("127.0.0.1") || ipAddress.equals("192.168.1.7")) {
-			ipAddress = "localhost";
 		}
-		String rmiServer = "rmi://" + this.gs.getMembershipList().getMember(sentToProcess).getIpAddress()
-				+ "/" + ipAddress
-				+ this.gs.getMembershipList().getMember(sentToProcess).getPortNumber();
-		return rmiServer;
-	}
-	*/
+		result = new String("Rebalance Complete").getBytes();
+		return result;
+	}	
 }

@@ -39,6 +39,7 @@ public class DFSClientThread extends Thread {
 				DataOutputStream dos = new DataOutputStream(out);
 				dos.writeInt(this.data.length);
 				dos.write(this.data);
+				dos.flush();
 				
 				InputStream in = dlSocket.getInputStream();
 				DataInputStream dis = new DataInputStream(in);
@@ -47,7 +48,7 @@ public class DFSClientThread extends Thread {
 			    if (len > 0) {
 			        dis.readFully(data);
 			    }
-				System.out.println(new String(data));
+				//System.out.println(new String(data));
 				dlSocket.close();
 			}
 			if(this.commandType.equals("get")) {
@@ -58,6 +59,7 @@ public class DFSClientThread extends Thread {
 				DataOutputStream dos = new DataOutputStream(out);
 				dos.writeInt(this.data.length);
 				dos.write(this.data);
+				dos.flush();
 				
 				InputStream in = dlSocket.getInputStream();
 				DataInputStream dis = new DataInputStream(in);
@@ -78,6 +80,7 @@ public class DFSClientThread extends Thread {
 				DataOutputStream dos = new DataOutputStream(out);
 				dos.writeInt(this.data.length);
 				dos.write(this.data);
+				dos.flush();
 				
 				InputStream in = dlSocket.getInputStream();
 				DataInputStream dis = new DataInputStream(in);
@@ -86,7 +89,26 @@ public class DFSClientThread extends Thread {
 			    if (len > 0) {
 			        dis.readFully(data);
 			    }
-				System.out.println(new String(data));
+				//System.out.println(new String(data));
+				dlSocket.close();
+			}
+			if(this.commandType.equals("reb")) {
+				//System.out.println("issuing del to server");
+				Socket dlSocket = new Socket(this.ipAddress, this.portNumber);
+				OutputStream out = dlSocket.getOutputStream();
+				DataOutputStream dos = new DataOutputStream(out);
+				dos.writeInt(this.data.length);
+				dos.write(this.data);
+				dos.flush();
+				
+				InputStream in = dlSocket.getInputStream();
+				DataInputStream dis = new DataInputStream(in);
+				int len = dis.readInt();
+			    byte[] data = new byte[len];
+			    if (len > 0) {
+			        dis.readFully(data);
+			    }
+				//System.out.println(new String(data));
 				dlSocket.close();
 			}
 			/*
@@ -102,7 +124,9 @@ public class DFSClientThread extends Thread {
 		} catch (EOFException e) {
 			//issue connecting to server assume it failed
 			//e.printStackTrace();	
-			System.out.println("DFS file not found.");
+			//if(this.commandType.equals("get")) {
+			//	System.out.println("DFS file not found.");
+			//}
 			Thread.currentThread().interrupt();
 			return;	
 		} catch (IOException e) {

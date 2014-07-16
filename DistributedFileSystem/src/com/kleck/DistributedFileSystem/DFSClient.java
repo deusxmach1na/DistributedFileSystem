@@ -92,7 +92,7 @@ public class DFSClient {
 	}
 	
 	//turns the command into a byte array
-	private byte[] formCommand(String commandType, String filename, boolean b, byte[] data) {
+	public byte[] formCommand(String commandType, String filename, boolean b, byte[] data) {
 		byte[] result = new byte[data.length + 64];
 		byte[] com = new byte[16];
 		com = Arrays.copyOf(commandType.getBytes(), 16);

@@ -17,9 +17,9 @@ public class FSServer {
 	public FSServer(int portNumber, int gossipPort, int serverNumber, boolean isContact) {
 		this.portNumber = portNumber;
 		this.serverNumber = serverNumber;
-		this.gs = new GroupServer(gossipPort, isContact);
+		this.gs = new GroupServer(gossipPort, isContact, portNumber);
 		this.gs.start();
-		
+		this.gs.setFs(this);
 		try {
 			//initialize server socket
 			this.serverSocket = new ServerSocket(this.portNumber);

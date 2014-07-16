@@ -15,6 +15,7 @@ class MembershipListRow implements Serializable {
 	private String processId;
 	private String ipAddress;
 	private int portNumber;
+	private int filePortNumber;
 	private int hbCounter;
 	private long timeStamp;
 	private boolean isDeletable;
@@ -105,6 +106,7 @@ class MembershipListRow implements Serializable {
 	public String toString() {
 		return "ProcessId = " + this.processId 
 				+ "\nPortNumber = " + this.portNumber 
+				+ "\nFile PortNumber = " + this.filePortNumber 
 				+ "\nHearbeat = " + this.hbCounter 
 				+ "\nTimeStamp = " + this.timeStamp 
 				+ "\nIsDeletable = " + this.isDeletable 
@@ -161,5 +163,13 @@ class MembershipListRow implements Serializable {
 
 	public void setMaster(boolean isMaster) {
 		this.isMaster = isMaster;
+	}
+
+	public int getFilePortNumber() {
+		return filePortNumber;
+	}
+
+	public void setFilePortNumber(int filePortNumber) {
+		this.filePortNumber = filePortNumber;
 	}
 }

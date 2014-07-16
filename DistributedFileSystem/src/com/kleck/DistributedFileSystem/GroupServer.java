@@ -26,12 +26,15 @@ public class GroupServer extends Thread {
 	private long runtime;
 	private long starttime;
 	private int portNumber;
+	private int filePortNumber;
 	private Properties props;
+	private FSServer fs;
 
-	public GroupServer(int portNumber, boolean isContact) {
+	public GroupServer(int portNumber, boolean isContact, int filePortNumber) {
 		//start server
 		this.portNumber = portNumber;
 		this.isContact = isContact;
+		this.filePortNumber = filePortNumber;
 	}
 	
 	public void run() {
@@ -51,7 +54,7 @@ public class GroupServer extends Thread {
 		
 		//add yourself to your membership list
 		ml.addNewMember(processId, this.portNumber, this.isContact);
-		
+		this.ml.getMember(processId).setFilePortNumber(this.filePortNumber);
 		//start listening for gossip
 		GossipListenThread glt = new GossipListenThread(this.portNumber, this);
 		glt.start();
@@ -267,5 +270,23 @@ public class GroupServer extends Thread {
 	
 	public String getSuccessor() {
 		return this.getMembershipList().getMember(this.getProcessId()).getSuccessor();
+	}	
+	
+	public FSServer getFs() {
+		return fs;
+	}
+
+	public void setFs(FSServer fs) {
+		this.fs = fs;
+	}
+
+
+	public void replicateFiles() {
+		//talk to your file server and tell it to rebalance
+		//just re-use a client thread
+		int portNumber = Integer.parseInt(this.props.getProperty("servers").split(",")[2]);
+		DFSClientThread dct = new DFSClientThread(this.ipAddress, portNumber, "rebalance", 
+				FileServerProtocol.formCommand("reb", "none", true, null));
+		dct.start();
 	}
 }
